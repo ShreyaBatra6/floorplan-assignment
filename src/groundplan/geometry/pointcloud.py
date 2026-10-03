@@ -174,3 +174,19 @@ def ray_samples(depth: np.ndarray, conf: np.ndarray, K: np.ndarray, T_wc: np.nda
     d = np.where((depth > 0.25) & (depth < dmax) & (conf >= 1), depth, 0.0)
     pts, valid = depth_to_points(d, K, stride)
     return transform_points(T_wc, pts[valid]).astype(np.float32)
+
+
+def miss_rays(depth: np.ndarray, conf: np.ndarray, K: np.ndarray, T_wc: np.ndarray, stride: int = 8,
+              dmax: float = 5.0) -> np.ndarray:
+    """Unit world directions of pixels that returned no usable depth (glass, open sky, out of range)."""
+    d = depth[::stride, ::stride]
+    c = conf[::stride, ::stride]
+    miss = (d <= 0) | (d > dmax) | (c == 0)
+    if not miss.any():
+        return np.zeros((0, 3), np.float32)
+    v, u = np.nonzero(miss)
+    u = u * stride
+    v = v * stride
+    dirs = np.stack([(u - K[0, 2]) / K[0, 0], (v - K[1, 2]) / K[1, 1], np.ones(len(u))], axis=1)
+    dirs /= np.linalg.norm(dirs, axis=1, keepdims=True)
+    return (dirs @ T_wc[:3, :3].T).astype(np.float32)

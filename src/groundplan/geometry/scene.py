@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
+from scipy import ndimage
 
 from groundplan.geometry.floorceiling import Level, find_ceiling, find_floor
 from groundplan.geometry.manhattan import dominant_yaw
@@ -25,10 +26,13 @@ from groundplan.geometry.walls import (
     WallLine,
     detect_wall_lines,
     facing_of,
+    line_tops,
+    rays_over_top,
     polygon_area,
     refine_offsets,
     room_polygon,
     simplify_outline,
+    suppress_occluders,
 )
 
 
@@ -40,6 +44,8 @@ class SceneInput:
     cams: np.ndarray  # (K, 3) camera centres
     ray_cam: np.ndarray  # (R,) index into cams per ray
     ray_end: np.ndarray  # (R, 3) ray endpoints (observed surfaces)
+    miss_cam: np.ndarray | None = None  # (Q,) index into cams per no-return ray
+    miss_dir: np.ndarray | None = None  # (Q, 3) unit world direction of each no-return ray
 
 
 @dataclass
@@ -125,22 +131,54 @@ def build_layout(scene: SceneInput, p: CoreParams | None = None) -> SceneLayout:
     band = (h > p.wall_band_bottom) & (h < top)
 
     we_all = wall_evidence(grid, xy[vertical & band], h[vertical & band])
-    masks = {}
+    masks, tops = {}, {}
     for f in FACINGS:
         sel = (facing == f) & band
         we = wall_evidence(grid, xy[sel], h[sel])
         masks[f] = (we.span >= p.min_wall_span) & (we.count >= 2)
+        if ceiling is not None:
+            # a face reaching the ceiling is wall even if furniture hides its lower part
+            masks[f] |= (we.top >= (ceiling.y - floor.y) - 0.2) & (we.span >= 0.3) & (we.count >= 2)
+        tops[f] = we.top
     lines = detect_wall_lines(masks, grid)
+    room_height = (ceiling.y - floor.y) if ceiling else None
 
     floor_seen = grid.count(xy[(nrm[:, 1] > 0.9) & (np.abs(h) < 0.04)])
     ray_end_xy = frame.to_plan(scene.ray_end)
     ray_start_xy = cams_xy[scene.ray_cam]
+    ray_start_h = frame.height(scene.cams)[scene.ray_cam]
+    ray_end_h = frame.height(scene.ray_end)
     free = carve_free_space(grid, ray_start_xy, ray_end_xy)
+
+    tops_l = line_tops(lines, tops, grid)
+    over = None
+    if room_height:
+        over = [rays_over_top(ln, t, room_height, ray_start_xy, ray_start_h, ray_end_xy, ray_end_h)
+                for ln, t in zip(lines, tops_l)]
+    lines, dropped = suppress_occluders(lines, tops_l, room_height, over_counts=over)
+    if dropped:
+        notes.append(f"{len(dropped)} tall-furniture face(s) in front of walls ignored when outlining rooms")
+        # furniture faces must not split the interior either
+        occ = np.zeros(grid.shape, bool)
+        for ln in dropped:
+            n_s = max(int((ln.hi - ln.lo) / grid.res), 2)
+            along = np.linspace(ln.lo, ln.hi, n_s)
+            pts = (np.column_stack([np.full(n_s, ln.offset), along]) if ln.axis == 0
+                   else np.column_stack([along, np.full(n_s, ln.offset)]))
+            iy, ix, ok = grid.index(pts)
+            occ[iy[ok], ix[ok]] = True
+        occ = ndimage.binary_dilation(occ, iterations=3)
+        we_all = WallEvidence(np.where(occ, 0, we_all.count), np.where(occ, 0, we_all.span), we_all.top)
 
     seg = segment_rooms(grid, free, floor_seen, we_all, p.seg)
 
-    ray_start_h = frame.height(scene.cams)[scene.ray_cam]
-    ray_end_h = frame.height(scene.ray_end)
+    if scene.miss_dir is not None and len(scene.miss_dir):
+        miss_start_xy = cams_xy[scene.miss_cam]
+        miss_start_h = frame.height(scene.cams)[scene.miss_cam]
+        miss_dir_xy = frame.dir_to_plan(scene.miss_dir)
+        miss_dir_h = scene.miss_dir[:, 1]
+    else:
+        miss_start_xy = miss_start_h = miss_dir_xy = miss_dir_h = None
 
     rooms: list[RoomGeom] = []
     for k in range(1, seg.n_rooms + 1):
@@ -168,7 +206,8 @@ def build_layout(scene: SceneInput, p: CoreParams | None = None) -> SceneLayout:
             want = [f for f, (ax, sg) in FACINGS.items() if ax == e.axis and sg == e.inward][0]
             sel = (facing == want) & (np.abs(xy[:, e.axis] - e.offset) < p.openings.solid_band)
             cands = detect_openings(e.axis, e.offset, e.inward, a, b, wall_h, xy[sel], h[sel],
-                                    ray_start_xy, ray_start_h, ray_end_xy, ray_end_h, room_pts, p.openings)
+                                    ray_start_xy, ray_start_h, ray_end_xy, ray_end_h, room_pts, p.openings,
+                                    miss_start_xy, miss_start_h, miss_dir_xy, miss_dir_h)
             for c in cands:
                 room.openings.append((t, c))
 

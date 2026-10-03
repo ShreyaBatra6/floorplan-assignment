@@ -73,6 +73,75 @@ def detect_wall_lines(masks: dict[int, np.ndarray], grid: Grid, min_len: float =
     return lines
 
 
+def line_tops(lines: list[WallLine], tops: dict[int, np.ndarray], grid: Grid) -> list[float]:
+    """Median height of the highest wall point along each line (per-facing top-height grids)."""
+    out = []
+    for ln in lines:
+        top = tops[ln.facing]
+        n = max(int((ln.hi - ln.lo) / grid.res), 1)
+        along = np.linspace(ln.lo, ln.hi, n)
+        if ln.axis == 0:
+            xy = np.column_stack([np.full(n, ln.offset), along])
+        else:
+            xy = np.column_stack([along, np.full(n, ln.offset)])
+        iy, ix, ok = grid.index(xy)
+        vals = []
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                yy = np.clip(iy[ok] + dy, 0, grid.shape[0] - 1)
+                xx = np.clip(ix[ok] + dx, 0, grid.shape[1] - 1)
+                vals.append(top[yy, xx])
+        v = np.max(np.stack(vals), axis=0) if vals else np.zeros(0)
+        v = v[v > 0]
+        out.append(float(np.median(v)) if len(v) else 0.0)
+    return out
+
+
+def rays_over_top(ln: WallLine, top: float, room_height: float, ray_start_xy: np.ndarray, ray_start_h: np.ndarray,
+                  ray_end_xy: np.ndarray, ray_end_h: np.ndarray, beyond: float = 0.05) -> int:
+    """How many observation rays pass over this face (above its top) and land behind it."""
+    a0 = (ray_start_xy[:, ln.axis] - ln.offset) * ln.sign
+    a1 = (ray_end_xy[:, ln.axis] - ln.offset) * ln.sign
+    cand = (a0 > 0.02) & (a1 < -beyond)
+    if not cand.any():
+        return 0
+    t = a0[cand] / (a0[cand] - a1[cand])
+    along = 1 - ln.axis
+    s = ray_start_xy[cand, along] + (ray_end_xy[cand, along] - ray_start_xy[cand, along]) * t
+    h = ray_start_h[cand] + (ray_end_h[cand] - ray_start_h[cand]) * t
+    inside = (s > ln.lo + 0.05) & (s < ln.hi - 0.05) & (h > top + 0.05) & (h < room_height - 0.05)
+    return int(inside.sum())
+
+
+def suppress_occluders(lines: list[WallLine], tops: list[float], room_height: float | None,
+                       max_depth: float = 1.2, min_gain: float = 0.2,
+                       over_counts: list[int] | None = None, min_over: int = 30) -> tuple[list[WallLine], list[WallLine]]:
+    """Drop faces of tall furniture standing in front of a wall.
+
+    A wardrobe front looks like a wall in plan (it spans 2 m of height), but it does not reach the
+    ceiling: rays pass over its top and land on the wall behind (``over_counts``), and that wall is
+    often detected as another face with the same orientation further from the room that reaches
+    higher. Either piece of evidence marks the face as furniture.
+    """
+    keep, dropped = [], []
+    limit = (room_height - 0.3) if room_height else 2.3
+    for i, ln in enumerate(lines):
+        occluder = bool(over_counts is not None and room_height and tops[i] < limit and over_counts[i] >= min_over)
+        if not occluder and tops[i] < limit:
+            for j, other in enumerate(lines):
+                if j == i or other.facing != ln.facing:
+                    continue
+                behind = (ln.offset - other.offset) * ln.sign  # > 0 when other is further from the room
+                if not (0.03 <= behind <= max_depth):
+                    continue
+                overlap = min(ln.hi, other.hi) - max(ln.lo, other.lo)
+                if overlap >= 0.5 * ln.length and tops[j] >= tops[i] + min_gain:
+                    occluder = True
+                    break
+        (dropped if occluder else keep).append(ln)
+    return keep, dropped
+
+
 def _cluster_segments(segs, facing, axis, sign, merge_dist) -> list[WallLine]:
     """Merge row/column runs belonging to the same face (adjacent offsets, overlapping extents)."""
     segs = sorted(segs)
@@ -161,6 +230,7 @@ def room_polygon(region: np.ndarray, grid: Grid, lines: list[WallLine], min_cove
     if n > 1:
         sizes = ndimage.sum(np.ones_like(lab), lab, index=np.arange(1, n + 1))
         sel = lab == (1 + int(np.argmax(sizes)))
+    sel = _complete_occluded_strips(sel, xs_cut, ys_cut, lines)
     sel = ndimage.binary_fill_holes(sel)
     verts = _cells_to_polygon(sel, xs_cut, ys_cut)
     if verts is None or len(verts) < 4:
@@ -168,6 +238,37 @@ def room_polygon(region: np.ndarray, grid: Grid, lines: list[WallLine], min_cove
     outline = RoomOutline(vertices=verts)
     outline.edges = _edges_from_vertices(verts, lines)
     return outline
+
+
+def _complete_occluded_strips(sel: np.ndarray, xs: list[float], ys: list[float], lines: list[WallLine],
+                              max_depth: float = 1.2, tol: float = 0.035) -> np.ndarray:
+    """Add strips hidden behind furniture: an unselected cell next to the room whose far side is a
+    wall face looking back towards the room belongs to the room (the floor there was just not seen)."""
+    out = sel.copy()
+    ny, nx = sel.shape
+
+    def has_line(axis, offset, sign, lo, hi):
+        for ln in lines:
+            if ln.axis == axis and ln.sign == sign and abs(ln.offset - offset) <= tol:
+                if min(hi, ln.hi) - max(lo, ln.lo) >= 0.5 * (hi - lo):
+                    return True
+        return False
+
+    for j in range(ny):
+        for i in range(nx):
+            if sel[j, i]:
+                continue
+            w, h = xs[i + 1] - xs[i], ys[j + 1] - ys[j]
+            # neighbour on the left selected: far side is the right edge x = xs[i+1], face looking -x
+            if i > 0 and sel[j, i - 1] and w <= max_depth and has_line(0, xs[i + 1], -1, ys[j], ys[j + 1]):
+                out[j, i] = True
+            elif i + 1 < nx and sel[j, i + 1] and w <= max_depth and has_line(0, xs[i], 1, ys[j], ys[j + 1]):
+                out[j, i] = True
+            elif j > 0 and sel[j - 1, i] and h <= max_depth and has_line(1, ys[j + 1], -1, xs[i], xs[i + 1]):
+                out[j, i] = True
+            elif j + 1 < ny and sel[j + 1, i] and h <= max_depth and has_line(1, ys[j], 1, xs[i], xs[i + 1]):
+                out[j, i] = True
+    return out
 
 
 def _dedupe(vals: list[float], tol: float) -> list[float]:

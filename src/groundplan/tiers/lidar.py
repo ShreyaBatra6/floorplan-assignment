@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 from groundplan.calib.intervals import load_calibration
-from groundplan.geometry.pointcloud import backproject_frame, ray_samples, select_keyframes, voxel_fuse
+from groundplan.geometry.pointcloud import backproject_frame, miss_rays, ray_samples, select_keyframes, voxel_fuse
 from groundplan.geometry.scene import CoreParams, SceneInput, SceneLayout, build_layout
 from groundplan.io.stray import StrayCapture, load_stray
 
@@ -38,7 +38,7 @@ class LidarResult:
 
 def fuse_lidar(cap: StrayCapture, keyframes: np.ndarray, poses: np.ndarray, opts: LidarOptions,
                depth_scale: float = 1.0, depth_offset: float = 0.0) -> SceneInput:
-    X, N, G, RE, RC = [], [], [], [], []
+    X, N, G, RE, RC, MD, MC = [], [], [], [], [], [], []
     for j, (i, (d, c)) in enumerate(zip(keyframes, cap.load_depth_batch(keyframes))):
         K = cap.K_depth(i)
         p, n = backproject_frame(d, c, K, poses[j], min_conf=opts.min_conf, dmax=opts.max_depth,
@@ -50,10 +50,14 @@ def fuse_lidar(cap: StrayCapture, keyframes: np.ndarray, poses: np.ndarray, opts
         r = ray_samples(d_corr, c, K, poses[j], stride=opts.ray_stride)
         RE.append(r)
         RC.append(np.full(len(r), j, np.int32))
+        m = miss_rays(d_corr, c, K, poses[j], stride=opts.ray_stride * 2)
+        MD.append(m)
+        MC.append(np.full(len(m), j, np.int32))
     X, N, G = np.concatenate(X), np.concatenate(N), np.concatenate(G)
     xyz, nrm, _, grp = voxel_fuse(X, N, G, opts.voxel)
     return SceneInput(xyz=xyz, normal=nrm, group=grp, cams=poses[:, :3, 3].astype(np.float32),
-                      ray_cam=np.concatenate(RC), ray_end=np.concatenate(RE))
+                      ray_cam=np.concatenate(RC), ray_end=np.concatenate(RE),
+                      miss_cam=np.concatenate(MC), miss_dir=np.concatenate(MD))
 
 
 def run_lidar(path: Path, opts: LidarOptions | None = None, core: CoreParams | None = None) -> LidarResult:
