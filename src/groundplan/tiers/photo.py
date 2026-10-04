@@ -6,8 +6,9 @@ Per room:    photos registered pairwise with SIFT matches lifted to 3D (gravity-
              RANSAC: yaw, translation and relative scale, because every photo's depth has its own
              scale error); the registered points go through the same geometric core as the other
              tiers, at a coarser grid and with the photo tier's error budget.
-Scale:       fused from the calibrated model factor, the room's ceiling, door heads and camera
-             heights (``tiers/scale.py``); the fused log-sigma widens every interval.
+Scale:       fused from the calibrated model factor, the room's ceiling, door heads, camera
+             heights and, when the protocol's sheet is on the floor, its printed size
+             (``tiers/scale.py``, ``tiers/paper.py``); the fused log-sigma widens every interval.
 Property:    rooms placed by the layout solver (compass headings + door pairing + no overlap).
 """
 
@@ -29,6 +30,7 @@ from groundplan.geometry.scene import CoreParams, SceneInput, SceneLayout, build
 from groundplan.io.photos import Photo, RoomPhotos, load_photo_folders
 from groundplan.models.depth import predict_depth
 from groundplan.tiers import scale as S
+from groundplan.tiers.paper import find_sheet
 
 PHOTO_CORE = CoreParams(grid_res=0.03, min_wall_span=0.5, refine_band=0.15, refine_h_lo=0.2,
                         unobserved_wall_sigma=0.15, wall_band_bottom=0.1,
@@ -252,7 +254,7 @@ def _structural_poses(geoms: list[PhotoGeom]):
         plan_n = np.stack([g.nrm[:, 0], -g.nrm[:, 2]], 1)
         plan_n /= np.linalg.norm(plan_n, axis=1, keepdims=True) + 1e-9
         vert = np.abs(g.nrm[:, 1]) < 0.3
-        obs.append(wall_observations(plan_p[vert], plan_n[vert]))
+        obs.append(wall_observations(plan_p[vert], plan_n[vert], heights=g.pts[vert, 1]))
     from groundplan.tiers.structural import rotate_facing
 
     backs = []
@@ -370,11 +372,78 @@ def scale_room(rec: RoomRecon) -> None:
         if main is not None:
             cam_h.append(float(t[1] - main.floor_y))
     cues.append(S.camera_cue(cam_h, "photo"))
+    if main is not None:
+        sheet = find_sheet(photo_views(rec, scale=1.0), main.floor_y)
+        if sheet is not None:
+            cues.append(S.paper_cue(sheet.long_raw, sheet.paper, sheet.sigma, sheet.detail))
     rec.scale, rec.sigma_log, rec.scale_info = S.fuse([c for c in cues if c is not None])
     scene = room_scene(rec, rec.scale)
     rec.layout = build_layout(scene, PHOTO_CORE)
     if _main_room(rec.layout, rec.layout.frame.to_plan(scene.cams)) is None:
         _fallback_room(rec, scene)
+
+
+def photo_consistency(rec: RoomRecon, margin: float = 0.3, min_floor_inside: float = 0.6) -> list[int]:
+    """Photos whose registration contradicts the room outline built from all of them.
+
+    A photo is taken inside the room, so its camera must lie inside the outline, and the floor it
+    sees must mostly fall inside the outline too (``margin`` allows for points seen through a
+    doorway). A photo registered to the wrong place or rotation fails one of the two.
+    """
+    from matplotlib.path import Path as MplPath
+
+    if rec.layout is None or not rec.layout.rooms:
+        return []
+    frame, room = rec.layout.frame, rec.layout.rooms[0]
+    poly = MplPath(room.outline.vertices)
+    bad = []
+    for k, (Rr, t, s) in rec.poses.items():
+        g = rec.geoms[k]
+        pts = ((g.pts @ Rr.T) * s + t) * rec.scale
+        cam_in = poly.contains_point(frame.to_plan(t * rec.scale), radius=margin) or \
+            poly.contains_point(frame.to_plan(t * rec.scale), radius=-margin)
+        floor = pts[np.abs(pts[:, 1] - room.floor_y) < 0.08]
+        inside = 1.0
+        if len(floor) >= 50:
+            xy = frame.to_plan(floor[:: max(len(floor) // 3000, 1)])
+            inside = float(np.mean(poly.contains_points(xy, radius=margin) | poly.contains_points(xy, radius=-margin)))
+        if not cam_in or inside < min_floor_inside:
+            bad.append(k)
+    return bad
+
+
+def verify_room(rec: RoomRecon) -> None:
+    """Drop photos that contradict the room (rebuilding once without them); otherwise widen the room's intervals.
+
+    Also reports walls that no photo shows: their position is inferred, and the core already gives
+    them the unobserved-wall sigma."""
+    _check_registration(rec)
+    if rec.layout is not None and rec.layout.rooms:
+        edges = rec.layout.rooms[0].outline.edges
+        unseen = sum(e.line is None for e in edges)
+        if unseen:
+            rec.notes.append(f"{rec.name}: {unseen} of {len(edges)} walls appear in no photo; their positions are "
+                             "inferred and carry wide intervals (photograph every wall, protocol step C2)")
+
+
+def _check_registration(rec: RoomRecon) -> None:
+    bad = photo_consistency(rec)
+    if not bad:
+        return
+    names = ", ".join(rec.geoms[k].photo.path.name for k in bad)
+    if len(rec.poses) - len(bad) >= 2:
+        for k in bad:
+            rec.poses.pop(k)
+        scale_room(rec)
+        still = photo_consistency(rec)
+        if not still:
+            rec.notes.append(f"{rec.name}: {len(bad)} photo(s) disagreed with the room outline and were left out "
+                             f"({names})")
+            return
+        bad = still
+    rec.sigma_log = float(math.hypot(rec.sigma_log, 0.15))
+    rec.notes.append(f"{rec.name}: photo registration could not be verified ({len(bad)} photo(s) disagree with the "
+                     "room outline); its dimensions carry a wider interval and should be re-captured")
 
 
 def _fallback_room(rec: RoomRecon, scene: SceneInput) -> None:
@@ -399,15 +468,16 @@ def _fallback_room(rec: RoomRecon, scene: SceneInput) -> None:
                      "box with every wall unobserved (wide intervals)")
 
 
-def photo_views(rec: RoomRecon) -> list[View]:
-    """The room's photos as posed views (room frame, metric) for damage detection."""
+def photo_views(rec: RoomRecon, scale: float | None = None) -> list[View]:
+    """The room's photos as posed views in the room frame (metric unless ``scale`` says otherwise)."""
+    scale = rec.scale if scale is None else scale
     views = []
     for k, (Rr, t, s) in rec.poses.items():
         g = rec.geoms[k]
         T = np.eye(4)
         T[:3, :3] = Rr @ g.R
-        T[:3, 3] = t * rec.scale
-        depth = g.depth_raw * s * rec.scale
+        T[:3, 3] = t * scale
+        depth = g.depth_raw * s * scale
         views.append(View(g.photo.image, g.photo.K, T, depth, g.photo.K, g.photo.path.name))
     return views
 
@@ -419,5 +489,6 @@ def run_photos(root: Path) -> list[RoomRecon]:
             continue
         rec = reconstruct_room(room)
         scale_room(rec)
+        verify_room(rec)
         recs.append(rec)
     return recs

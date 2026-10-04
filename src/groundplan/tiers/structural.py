@@ -60,8 +60,15 @@ def rotate_offset(offset_xy: tuple[float, float], k: int) -> tuple[float, float]
     return x, y
 
 
-def wall_observations(pts_plan: np.ndarray, normals_plan: np.ndarray, min_frac: float = 0.03) -> list[WallObs]:
-    """Dominant wall per facing in one photo (plan coordinates relative to the camera)."""
+def wall_observations(pts_plan: np.ndarray, normals_plan: np.ndarray, min_frac: float = 0.03,
+                      heights: np.ndarray | None = None) -> list[WallObs]:
+    """The room's wall per facing in one photo (plan coordinates relative to the camera).
+
+    Points sharing a facing form layers along that axis: the wall itself, furniture fronts in front
+    of it, and walls of the next room seen through a doorway behind it. With ``heights`` each layer
+    is scored by its support times its vertical extent, because only the room's own wall spans
+    (nearly) floor to ceiling across the whole view; without heights the densest layer is used.
+    """
     from groundplan.geometry.walls import facing_of
 
     fac = facing_of(normals_plan)
@@ -72,10 +79,23 @@ def wall_observations(pts_plan: np.ndarray, normals_plan: np.ndarray, min_frac: 
         if sel.sum() < max(min_frac * n, 40):
             continue
         coord = pts_plan[sel, axis]
-        # the wall is the farthest dense layer of points with this facing (furniture stands in front)
         hist, edges = np.histogram(coord, bins=60)
-        peak = np.argmax(hist)
-        o = float((edges[peak] + edges[peak + 1]) / 2)
+        centres = (edges[:-1] + edges[1:]) / 2
+        cand = [int(np.argmax(hist))]
+        if heights is not None:
+            hs = heights[sel]
+            peaks = [k for k in range(len(hist)) if hist[k] >= 0.3 * hist.max()
+                     and hist[k] >= hist[max(k - 1, 0)] and hist[k] >= hist[min(k + 1, len(hist) - 1)]]
+            scored = []
+            for k in peaks:
+                layer = np.abs(coord - centres[k]) < 0.12 * max(abs(centres[k]), 0.5)
+                if layer.sum() < 20:
+                    continue
+                span = float(np.percentile(hs[layer], 95) - np.percentile(hs[layer], 5))
+                scored.append((layer.sum() * span, k))
+            if scored:
+                cand = [max(scored)[1]]
+        o = float(centres[cand[0]])
         near = np.abs(coord - o) < 0.12 * max(abs(o), 0.5)
         o = float(np.median(coord[near]))
         dist = max(abs(o), 0.3)
