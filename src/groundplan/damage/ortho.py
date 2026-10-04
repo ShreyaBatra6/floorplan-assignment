@@ -84,33 +84,72 @@ def _project(K: np.ndarray, T_wc: np.ndarray, pts: np.ndarray):
     return u, v, z
 
 
-def select_views(surface: SurfaceGeom, views: list[View], max_views: int = 12, max_dist: float = 4.0,
-                 min_cos: float = 0.3) -> list[int]:
-    """Views that face the surface, ranked by how squarely and closely they see its centre."""
-    uc, vc = (surface.u0 + surface.u1) / 2, (surface.v0 + surface.v1) / 2
-    corners = [(surface.u0, surface.v0), (surface.u1, surface.v0), (surface.u0, surface.v1), (surface.u1, surface.v1),
-               (uc, vc)]
-    pts = np.array([surface.origin + (a - surface.u0) * surface.u_axis + (b - surface.v0) * surface.v_axis
-                    for a, b in corners])
-    scored = []
-    for k, view in enumerate(views):
-        d = view.center - pts[-1]
-        dist = np.linalg.norm(d)
-        cos = float(d @ surface.normal / max(dist, 1e-6))
-        if cos < min_cos or dist > max_dist * 1.6:
-            continue
+def _sample_bilinear(image: np.ndarray, u: np.ndarray, v: np.ndarray) -> np.ndarray:
+    """Bilinear colour lookup for many points (remap's maps must stay below 32767 per side)."""
+    n = len(u)
+    cols = 1024
+    rows = int(np.ceil(n / cols))
+    mu = np.zeros(rows * cols, np.float32)
+    mv = np.zeros(rows * cols, np.float32)
+    mu[:n], mv[:n] = u, v
+    out = cv2.remap(image, mu.reshape(rows, cols), mv.reshape(rows, cols), interpolation=cv2.INTER_LINEAR)
+    return out.reshape(-1, 3)[:n]
+
+
+def select_views(surface: SurfaceGeom, views: list[View], max_views: int = 16, max_dist: float = 4.0,
+                 min_cos: float = 0.3, target_cover: int = 3, step: float = 0.2) -> list[int]:
+    """Views chosen greedily to see every part of the surface ``target_cover`` times, best-facing first."""
+    nu = max(int(np.ceil((surface.u1 - surface.u0) / step)), 1)
+    nv = max(int(np.ceil((surface.v1 - surface.v0) / step)), 1)
+    us = surface.u0 + (np.arange(nu) + 0.5) * (surface.u1 - surface.u0) / nu
+    vs = surface.v0 + (np.arange(nv) + 0.5) * (surface.v1 - surface.v0) / nv
+    uu, vv = np.meshgrid(us, vs)
+    pts = (surface.origin + (uu.ravel()[:, None] - surface.u0) * surface.u_axis
+           + (vv.ravel()[:, None] - surface.v0) * surface.v_axis)
+    if surface.polygon_uv is not None:
+        from matplotlib.path import Path as MplPath
+
+        keep = MplPath(surface.polygon_uv).contains_points(np.column_stack([uu.ravel(), vv.ravel()]))
+        pts = pts[keep] if keep.any() else pts
+    sees, quality = [], []
+    for view in views:
         u, v, z = _project(view.K, view.T_wc, pts)
         h, w = view.image.shape[:2]
-        inside = (z > 0.2) & (u >= 0) & (u < w) & (v >= 0) & (v < h)
-        if inside.sum() == 0:
-            continue
-        scored.append((cos / max(dist, 0.5) * (0.5 + inside.mean()), k))
-    scored.sort(reverse=True)
-    return [k for _, k in scored[:max_views]]
+        d = view.center - pts
+        dist = np.linalg.norm(d, axis=1)
+        cos = (d @ surface.normal) / np.maximum(dist, 1e-6)
+        ok = (z > 0.2) & (u >= 0) & (u < w) & (v >= 0) & (v < h) & (cos >= min_cos) & (dist <= max_dist)
+        if view.depth is not None and view.K_depth is not None:
+            ud, vd, zd = _project(view.K_depth, view.T_wc, pts)
+            dh, dw = view.depth.shape
+            iu = np.clip(np.round(np.nan_to_num(ud)).astype(int), 0, dw - 1)
+            iv = np.clip(np.round(np.nan_to_num(vd)).astype(int), 0, dh - 1)
+            obs = view.depth[iv, iu]
+            ok &= ~((obs > 0) & (obs < zd - 0.1))
+        sees.append(ok)
+        quality.append(np.where(ok, cos / np.maximum(dist, 0.5), 0.0))
+    if not sees:
+        return []
+    sees = np.array(sees)
+    quality = np.array(quality)
+    cover = np.zeros(len(pts), int)
+    chosen: list[int] = []
+    for _ in range(max_views):
+        need = cover < target_cover
+        if not need.any():
+            break
+        gain = (quality * need[None, :]).sum(axis=1)
+        gain[chosen] = -1
+        k = int(np.argmax(gain))
+        if gain[k] <= 0:
+            break
+        chosen.append(k)
+        cover += sees[k]
+    return chosen
 
 
 def build_mosaic(surface: SurfaceGeom, views: list[View], res: float = 0.01, top_k: int = 3, max_dist: float = 4.0,
-                 min_cos: float = 0.3, occlusion_margin: float = 0.06, max_views: int = 12) -> Mosaic | None:
+                 min_cos: float = 0.3, occlusion_margin: float = 0.06, max_views: int = 16) -> Mosaic | None:
     pts, uu, vv = surface.grid(res)
     nv, nu = uu.shape
     if nu * nv > 1_500_000:  # very large surfaces: coarsen to keep memory bounded
@@ -118,49 +157,65 @@ def build_mosaic(surface: SurfaceGeom, views: list[View], res: float = 0.01, top
     chosen = select_views(surface, views, max_views, max_dist, min_cos)
     if not chosen:
         return None
-    flat = pts.reshape(-1, 3)
+    flat = pts.reshape(-1, 3).astype(np.float32)
     n = len(flat)
-    scores = np.full((len(chosen), n), -1.0, np.float32)
-    colors = np.zeros((len(chosen), n, 3), np.uint8)
-    offsets = np.full((len(chosen), n), np.nan, np.float32)
-    for j, k in enumerate(chosen):
+    k_eff = min(top_k, len(chosen))
+    # running top-k per pixel: memory O(k * pixels) however many views are considered
+    best_s = np.full((k_eff, n), -1.0, np.float32)
+    best_c = np.zeros((k_eff, n, 3), np.uint8)
+    best_o = np.full((k_eff, n), np.nan, np.float32)
+    count = np.zeros(n, np.int16)
+    for k in chosen:
         view = views[k]
         h, w = view.image.shape[:2]
         u, v, z = _project(view.K, view.T_wc, flat)
         ok = (z > 0.2) & (u >= 0) & (u < w - 1) & (v >= 0) & (v < h - 1)
-        d = view.center[None, :] - flat
+        d = view.center[None, :].astype(np.float32) - flat
         dist = np.linalg.norm(d, axis=1)
-        cos = (d @ surface.normal) / np.maximum(dist, 1e-6)
+        cos = (d @ surface.normal.astype(np.float32)) / np.maximum(dist, 1e-6)
+        del d
         ok &= (cos >= min_cos) & (dist <= max_dist)
+        off = None
         if view.depth is not None and view.K_depth is not None:
             ud, vd, zd = _project(view.K_depth, view.T_wc, flat)
             dh, dw = view.depth.shape
-            iu = np.clip(np.round(ud).astype(int), 0, dw - 1)
-            iv = np.clip(np.round(vd).astype(int), 0, dh - 1)
+            iu = np.clip(np.round(ud).astype(np.int32), 0, dw - 1)
+            iv = np.clip(np.round(vd).astype(np.int32), 0, dh - 1)
             obs = view.depth[iv, iu]
-            # something measured clearly in front of the surface point: occluded
-            ok &= ~((obs > 0) & (obs < zd - occlusion_margin))
-            near = ok & (obs > 0) & (np.abs(zd - obs) < occlusion_margin)
-            offsets[j, near] = (zd - obs)[near]
-        if not ok.any():
-            continue
+            ok &= ~((obs > 0) & (obs < zd - occlusion_margin))  # something clearly in front: occluded
+            off = np.where(ok & (obs > 0) & (np.abs(zd - obs) < occlusion_margin), zd - obs, np.nan)
         idx = np.flatnonzero(ok)
-        px = cv2.remap(view.image, u[idx].astype(np.float32).reshape(-1, 1), v[idx].astype(np.float32).reshape(-1, 1),
-                       interpolation=cv2.INTER_LINEAR)
-        colors[j, idx] = px.reshape(-1, 3)
-        scores[j, idx] = (cos[idx] / np.maximum(dist[idx], 0.5)).astype(np.float32)
-    count = (scores > 0).sum(axis=0)
-    k_eff = min(top_k, len(chosen))
-    top = np.argsort(-scores, axis=0)[:k_eff]  # (k, n)
-    gathered = np.take_along_axis(colors, top[..., None], axis=0).astype(np.float32)
-    good = np.take_along_axis(scores, top, axis=0) > 0
+        if len(idx) == 0:
+            continue
+        count[idx] += 1
+        sc = (cos[idx] / np.maximum(dist[idx], 0.5)).astype(np.float32)
+        col = _sample_bilinear(view.image, u[idx], v[idx])
+        of = off[idx].astype(np.float32) if off is not None else np.full(len(idx), np.nan, np.float32)
+        # insert into the running top-k (slot k_eff-1 is the weakest)
+        for slot in range(k_eff):
+            better = sc > best_s[slot, idx]
+            if not better.any():
+                continue
+            sel = idx[better]
+            for lower in range(k_eff - 1, slot, -1):
+                best_s[lower, sel] = best_s[lower - 1, sel]
+                best_c[lower, sel] = best_c[lower - 1, sel]
+                best_o[lower, sel] = best_o[lower - 1, sel]
+            best_s[slot, sel] = sc[better]
+            best_c[slot, sel] = col[better]
+            best_o[slot, sel] = of[better]
+            keep = ~better
+            idx, sc, col, of = idx[keep], sc[keep], col[keep], of[keep]
+            if len(idx) == 0:
+                break
+    good = best_s > 0
+    gathered = best_c.astype(np.float32)
     gathered[~good] = np.nan
     with np.errstate(all="ignore"):
         med = np.nanmedian(gathered, axis=0)
-    off_top = np.take_along_axis(offsets, top, axis=0)
-    off_top[~good] = np.nan
-    with np.errstate(all="ignore"):
-        protrusion = np.nanmedian(off_top, axis=0)
+        best_o[~good] = np.nan
+        protrusion = np.nanmedian(best_o, axis=0)
+    del gathered
     valid = count > 0
     med = np.where(valid[:, None], med, 0)
     image = np.clip(med, 0, 255).astype(np.uint8).reshape(nv, nu, 3)

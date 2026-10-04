@@ -99,6 +99,7 @@ def run_capture(path: Path, out_dir: Path | None = None, opts: RunOptions | None
         drift = res.drift_report
         stitch_method = "single continuous capture: rooms share one (drift-corrected) world frame"
         lidar_res = res
+        res.scene = None  # the fused cloud is no longer needed; free it before damage detection
     else:
         raise NotImplementedError(f"the {tier} tier is not wired up yet")
 

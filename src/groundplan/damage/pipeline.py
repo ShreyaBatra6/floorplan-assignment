@@ -104,7 +104,7 @@ def run_damage(rooms: list[Room], views: list[View], frame: PlanFrame, ctx: Asse
     n = 0
     for room in rooms:
         for surf in surfaces_for_room(room, frame, ctx.origin, floor_offsets.get(room.id, 0.0)):
-            mosaic = build_mosaic(surf, views, res=0.01 if surf.kind == "wall" else 0.015)
+            mosaic = build_mosaic(surf, views, res=0.005 if surf.kind == "wall" else 0.015)
             if mosaic is None:
                 continue
             res.mosaics.append(mosaic)
@@ -113,6 +113,8 @@ def run_damage(rooms: list[Room], views: list[View], frame: PlanFrame, ctx: Asse
                 res.regions.append(_to_region(f"D{n}", room, surf, det, ctx, budget, out_dir))
     res.flags = evaluate(rooms, res.regions, {rid: {t.label} for rid, t in res.room_types.items()})
     res.scope = build_scope(rooms, res.regions, res.flags)
+    res.notes.append("floor surfaces are not assessed visually (rugs, mats and furniture make floor staining "
+                     "unreliable); floor-level water is flagged through wall-base staining (rule CDR-02)")
     if not any(m.surface.kind == "ceiling" for m in res.mosaics):
         res.notes.append("ceilings not observed: no ceiling damage could be assessed")
     return res

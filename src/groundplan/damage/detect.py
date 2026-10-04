@@ -73,6 +73,7 @@ class DetectParams:
     max_protrusion_m: float = 0.012  # region standing proud of the surface: an object, not damage
     min_stain_area_m2: float = 0.01  # stains, mould and peeling smaller than 10 x 10 cm are not reported
     crack_max_straightness: float = 0.97  # perfectly straight, axis-aligned lines are joints/trim/handles
+    crack_max_thickness_m: float = 0.012
 
 
 def _background(lab: np.ndarray, valid: np.ndarray, k: int) -> np.ndarray:
@@ -113,7 +114,7 @@ def find_candidates(m: Mosaic, p: DetectParams | None = None) -> list[Candidate]
         area_px = int(comp.sum())
         if area_px < min_px or area_px > p.max_area_frac * valid.sum():
             continue
-        if not _plausible(m, comp, valid, p):
+        if not _plausible(m, comp, valid, p) or m.surface.kind == "floor":
             continue
         out.append(Candidate(comp, "discoloration", float(de[comp].mean()),
                              (sl[0].start, sl[0].stop, sl[1].start, sl[1].stop)))
@@ -125,7 +126,8 @@ def find_candidates(m: Mosaic, p: DetectParams | None = None) -> list[Candidate]
     ridge = sato(L, sigmas=[1, 2], black_ridges=True)
     rv = ridge[core]
     if rv.size:
-        rthr = float(np.median(rv) + p.crack_ridge_k * 1.4826 * np.median(np.abs(rv - np.median(rv))) + 1e-4)
+        rthr = max(0.05, float(np.percentile(rv, 99)),
+                   float(np.median(rv) + p.crack_ridge_k * 1.4826 * np.median(np.abs(rv - np.median(rv)))))
         rmask = (ridge > rthr) & core
         skel = skeletonize(rmask)
         # each skeleton piece is judged on its own: two parallel handle bars are two straight lines
@@ -138,15 +140,18 @@ def find_candidates(m: Mosaic, p: DetectParams | None = None) -> list[Candidate]
             if length_m < p.crack_min_len_m or max(h, w) < p.crack_min_len_m or not _tortuous(piece, p):
                 continue
             comp = ndimage.binary_dilation(piece, iterations=1)
-            if comp.sum() * m.res**2 < 0.02 and _plausible(m, comp, valid, p):
+            if comp.sum() * m.res**2 < 0.02 and _plausible(m, comp, valid, p, min_views=1):
                 out.append(Candidate(comp, "ridge", float(ridge[comp].mean()),
                                      (sl[0].start, sl[0].stop, sl[1].start, sl[1].stop)))
     return out
 
 
-def _plausible(m: Mosaic, comp: np.ndarray, valid: np.ndarray, p: DetectParams) -> bool:
-    """Reject regions that are artefacts of where the surface was (not) observed or of its trim."""
-    if np.median(m.views[comp]) < p.min_views:
+def _plausible(m: Mosaic, comp: np.ndarray, valid: np.ndarray, p: DetectParams, min_views: int | None = None) -> bool:
+    """Reject regions that are artefacts of where the surface was (not) observed or of its trim.
+
+    Discolouration must be confirmed by ``min_views`` views (a glare or reflection is view-dependent);
+    a thin crack is not produced by reflections and may come from a single view."""
+    if np.median(m.views[comp]) < (p.min_views if min_views is None else min_views):
         return False
     if m.protrusion is not None:
         pr = m.protrusion[comp]
@@ -177,6 +182,12 @@ def _tortuous(skel: np.ndarray, p: DetectParams) -> bool:
     ang = abs(np.degrees(np.arctan2(vt[0, 1], vt[0, 0]))) % 90
     axis_aligned = min(ang, 90 - ang) < 6
     return not (straightness > p.crack_max_straightness and axis_aligned)
+
+
+def _thickness(mask: np.ndarray, res: float) -> float:
+    """Mean width of a line-like region: area over skeleton length."""
+    length = max(int(skeletonize(mask).sum()), 1)
+    return float(mask.sum()) / length * res
 
 
 def _elongation(mask: np.ndarray) -> float:
@@ -292,8 +303,9 @@ def classify(m: Mosaic, cands: list[Candidate], p: DetectParams | None = None, v
                 continue
             if cls in ("water_stain", "mold", "peeling_paint") and c.mask.sum() * m.res**2 < p.min_stain_area_m2:
                 continue
-            if cls == "crack" and c.kind_hint != "ridge" and _elongation(c.mask) < 4.0:
-                continue  # a crack is a line; a compact dark blob is something else
+            if cls == "crack" and c.kind_hint != "ridge" and (
+                    _elongation(c.mask) < 4.0 or _thickness(c.mask, m.res) > p.crack_max_thickness_m):
+                continue  # a crack is a thin line; a dark bar or blob is something else
             if prob < p.clip_min_prob or prob < neg * p.clip_margin:
                 continue
             conf, source = float(min(prob / (prob + neg + 1e-6), 0.95)), "clip"

@@ -93,8 +93,8 @@ def run_lidar(path: Path, opts: LidarOptions | None = None, core: CoreParams | N
     return LidarResult(cap, keyframes, poses, layout, scene, drift_report, timings, notes)
 
 
-def collect_views(cap: StrayCapture, keyframes: np.ndarray, poses: np.ndarray, max_views: int = 70,
-                  max_side: int = 960, depth_scale: float = 1.0, depth_offset: float = 0.0):
+def collect_views(cap: StrayCapture, keyframes: np.ndarray, poses: np.ndarray, max_views: int = 60,
+                  max_side: int = 1280, depth_scale: float = 1.0, depth_offset: float = 0.0):
     """RGB views for damage and room typing: evenly spread keyframes, sharpest kept, with depth for occlusion."""
     import cv2
 
