@@ -102,5 +102,43 @@ scripts/          setup, model/data fetch, development helpers
 
 Public stand-in benchmark (ARKitScenes homes with laser-scan truth, until our own captures exist):
 [`docs/PUBLIC_BENCHMARK.md`](docs/PUBLIC_BENCHMARK.md).
-Disclosures of every pretrained model, dataset and tool: [`docs/MODELS_AND_DATA.md`](docs/MODELS_AND_DATA.md).
 Requirement-by-requirement status: [`docs/COMPLIANCE_MATRIX.md`](docs/COMPLIANCE_MATRIX.md).
+
+## Models, data, tools and APIs (disclosure)
+
+Nothing calls a server we operate, and no cloud vision or language API is used. Model weights are
+downloaded from the public Hugging Face hub on first use (or ahead of time with
+`scripts/fetch_models.py`) and run locally on the CPU.
+
+| Model | Used for | Source | License |
+|---|---|---|---|
+| Depth Anything V2 Metric-Indoor-Small | metric monocular depth (photo, video tiers) | `depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf` | Apache-2.0 |
+| CLIP ViT-B/32 | damage verification (zero-shot), room type | `openai/clip-vit-base-patch32` | MIT |
+
+Evaluated and not used by default: Depth Anything V2 Metric-Indoor-Base (CC-BY-NC-4.0; no better
+scale on the assessor frames) and MoGe-2 (MIT; its release builds CUDA extensions from source,
+which breaks a 15-minute CPU install).
+
+**Libraries:** pycolmap/COLMAP (BSD-3, structure from motion), OpenCV (Apache-2.0), NumPy, SciPy,
+scikit-image, shapely, networkx (BSD/MIT-style), PyTorch, transformers, huggingface_hub
+(BSD/Apache-2.0), PyAV/FFmpeg (BSD-3/LGPL), pillow, pillow-heif (MIT-CMU/BSD-3), pydantic,
+jsonschema (MIT), matplotlib (PSF-style).
+
+**Capture apps:** Stray Scanner (Stray Robots, free, open source MIT) for LiDAR; the built-in iPhone
+Camera for photos and video; Polycam (free tier, Room mode) for the head-to-head only.
+
+**Data:**
+* Assessor sample captures (Round 1): development only (pose convention, depth-model scale against
+  LiDAR, staged-damage test). No ground truth, so no accuracy claim rests on them.
+* Our benchmark captures (laser/tape truth): protocol in `docs/BENCHMARK_PROTOCOL.md`, raw data
+  fetched by `scripts/fetch_data.py` with SHA-256 checks (pending capture).
+* Synthetic flats (`src/groundplan/sim/`): exact ground truth for the test suite and the drift ablation.
+* [ARKitScenes](https://github.com/apple/ARKitScenes) (Apple; Baruch et al., NeurIPS 2021 Datasets and
+  Benchmarks), Apple's ARKitScenes license, **non-commercial use**: iPad Pro 2020 recordings and Faro
+  laser scans of real homes as the public stand-in benchmark (`docs/PUBLIC_BENCHMARK.md`). Downloaded
+  from Apple by `scripts/arkitscenes.py`, never redistributed; only measurements derived from the laser
+  scans and their review renders are committed. Evaluation and calibration only.
+* No dataset was used to train or fine-tune anything.
+
+**Development assistance:** an AI coding assistant (Claude Code) was used while writing this
+repository, as the brief allows; commits it co-authored carry a `Co-Authored-By` trailer.
