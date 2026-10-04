@@ -96,6 +96,10 @@ def run_damage(rooms: list[Room], views: list[View], frame: PlanFrame, ctx: Asse
                room_presets: dict[str, str] | None = None, params: DetectParams | None = None) -> DamageResult:
     res = DamageResult()
     p = params or DetectParams()
+    if params is None and ctx.tier != "lidar":
+        # camera-only tiers: poses and depth are noisier, so the geometric filters are weaker; demand a
+        # clearer verdict before reporting damage (precision over recall)
+        p = DetectParams(clip_min_prob=0.55, clip_margin=2.0, min_views=2)
     if not views:
         res.notes.append("no images available for damage detection")
         return res

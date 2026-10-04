@@ -75,7 +75,7 @@ def run_sfm(clip: VideoClip, workdir: Path) -> SfMResult | None:
     pycolmap.extract_features(db, img_dir, camera_mode=pycolmap.CameraMode.SINGLE, reader_options=reader,
                               extraction_options=ext)
     pair = pycolmap.SequentialPairingOptions()
-    pair.overlap = 12
+    pair.overlap = 15
     pair.quadratic_overlap = True
     pair.num_threads = SFM_THREADS
     match = pycolmap.FeatureMatchingOptions()
@@ -88,12 +88,28 @@ def run_sfm(clip: VideoClip, workdir: Path) -> SfMResult | None:
     opts.ba_refine_focal_length = True
     opts.random_seed = 0
     opts.num_threads = SFM_THREADS
+    # a handheld walkthrough turns quickly in doorways: accept smaller (still verified) overlaps so the
+    # walk stays in one model instead of fragmenting at every turn
+    opts.min_num_matches = 10
+    opts.mapper.init_min_num_inliers = 50
+    opts.mapper.abs_pose_min_num_inliers = 15
+    opts.mapper.abs_pose_min_inlier_ratio = 0.15
+    opts.mapper.max_reg_trials = 5
     out = workdir / "sparse"
     out.mkdir(exist_ok=True)
     maps = pycolmap.incremental_mapping(db, img_dir, out, options=opts)
     if not maps:
         return None
-    rec = max(maps.values(), key=lambda r: r.num_reg_images())
+    models = [m for m in (_model(rec, len(clip.frames)) for rec in maps.values()) if m.registered >= 6]
+    if not models:
+        return None
+    if len(models) == 1:
+        models[0].notes = f"structure from motion: {models[0].registered}/{len(clip.frames)} frames in one model"
+        return models[0]
+    return bridge_models(clip, models)
+
+
+def _model(rec, n_frames: int) -> SfMResult:
     cam = next(iter(rec.cameras.values()))
     f, cx, cy = cam.params[0], cam.params[1], cam.params[2]
     K = np.array([[f, 0, cx], [0, f, cy], [0, 0, 1.0]])
@@ -118,8 +134,97 @@ def run_sfm(clip: VideoClip, workdir: Path) -> SfMResult | None:
                 uv.append(p2.xy)
                 pid.append(pid_index[p2.point3D_id])
         obs[k] = (np.array(uv).reshape(-1, 2), np.array(pid, int))
-    note = f"structure from motion: {len(poses)}/{len(clip.frames)} frames registered in the largest of {len(maps)} model(s)"
-    return SfMResult(poses, K, points, obs, len(poses), note)
+    return SfMResult(poses, K, points, obs, len(poses), "")
+
+
+def _metric_normalise(clip: VideoClip, m: SfMResult, samples: int = 6) -> float:
+    """Scale a model to the depth model's units (median model-depth / SfM-depth over a few frames)."""
+    keys = sorted(m.poses)
+    pick = [keys[i] for i in np.linspace(0, len(keys) - 1, min(samples, len(keys))).round().astype(int)]
+    ratios, _ = frame_scales(clip, m, sorted(set(pick)))
+    r = float(np.median(list(ratios.values()))) if ratios else 1.0
+    for k in m.poses:
+        m.poses[k] = m.poses[k].copy()
+        m.poses[k][:3, 3] *= r
+    m.points = m.points * r
+    return r
+
+
+def _pnp_step(clip: VideoClip, K: np.ndarray, T_a: np.ndarray, a: int, b: int, depth_a: np.ndarray):
+    """Pose of frame b from frame a (known pose, model-unit depth) by SIFT matches + PnP RANSAC."""
+    sift = cv2.SIFT_create(nfeatures=3000)
+    ga = cv2.cvtColor(clip.frames[a].image, cv2.COLOR_BGR2GRAY)
+    gb = cv2.cvtColor(clip.frames[b].image, cv2.COLOR_BGR2GRAY)
+    ka, da = sift.detectAndCompute(ga, None)
+    kb, db = sift.detectAndCompute(gb, None)
+    if da is None or db is None or len(ka) < 20 or len(kb) < 20:
+        return None
+    m = cv2.BFMatcher(cv2.NORM_L2).knnMatch(da, db, k=2)
+    good = [x[0] for x in m if len(x) == 2 and x[0].distance < 0.75 * x[1].distance]
+    if len(good) < 20:
+        return None
+    ua = np.array([ka[g.queryIdx].pt for g in good])
+    ub = np.array([kb[g.trainIdx].pt for g in good], np.float32)
+    h, w = depth_a.shape
+    d = depth_a[np.clip(ua[:, 1].astype(int), 0, h - 1), np.clip(ua[:, 0].astype(int), 0, w - 1)]
+    ok = (d > 0.2) & (d < 8)
+    if ok.sum() < 15:
+        return None
+    Pc = np.stack([(ua[ok, 0] - K[0, 2]) / K[0, 0] * d[ok], (ua[ok, 1] - K[1, 2]) / K[1, 1] * d[ok], d[ok]], 1)
+    Pw = Pc @ T_a[:3, :3].T + T_a[:3, 3]
+    found, rvec, tvec, inl = cv2.solvePnPRansac(Pw.astype(np.float32), ub[ok], K, None, reprojectionError=4.0,
+                                                iterationsCount=300, confidence=0.999)
+    if not found or inl is None or len(inl) < 15:
+        return None
+    R, _ = cv2.Rodrigues(rvec)
+    T = np.eye(4)
+    T[:3, :3] = R.T
+    T[:3, 3] = (-R.T @ tvec).ravel()
+    return T
+
+
+def bridge_models(clip: VideoClip, models: list[SfMResult]) -> SfMResult:
+    """Join SfM models that a fast turn split apart, by depth-aided PnP across the gap frames."""
+    for m in models:
+        _metric_normalise(clip, m)
+    models.sort(key=lambda m: float(np.median(list(m.poses))))
+    base = models[0]
+    joined, broken = 1, 0
+    for m in models[1:]:
+        a = max(base.poses)
+        b = min(m.poses)
+        if b <= a:  # overlapping in time: bridge from the base frame closest before m starts
+            before = [k for k in base.poses if k < b]
+            if not before:
+                broken += 1
+                continue
+            a = max(before)
+        T = base.poses[a]
+        ok = True
+        f = a
+        for nxt in range(a + 1, b + 1):
+            T_next = _pnp_step(clip, base.K, T, f, nxt, predict_depth(clip.frames[f].image))
+            if T_next is None:
+                ok = False
+                break
+            T, f = T_next, nxt
+        if not ok:
+            broken += 1
+            continue
+        M = T @ np.linalg.inv(m.poses[b])  # model m's world -> base world
+        offset = len(base.points)
+        base.points = np.vstack([base.points, m.points @ M[:3, :3].T + M[:3, 3]])
+        for k, Tk in m.poses.items():
+            if k not in base.poses:
+                base.poses[k] = M @ Tk
+                uv, pid = m.obs[k]
+                base.obs[k] = (uv, pid + offset)
+        joined += 1
+    base.registered = len(base.poses)
+    base.notes = (f"structure from motion: {len(models)} models joined into {joined} by depth-aided PnP bridges"
+                  f"{f' ({broken} could not be bridged and were dropped)' if broken else ''}; "
+                  f"{base.registered}/{len(clip.frames)} frames posed")
+    return base
 
 
 def gravity_up(poses: dict[int, np.ndarray]) -> np.ndarray:

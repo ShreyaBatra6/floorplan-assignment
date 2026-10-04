@@ -135,6 +135,10 @@ def run_capture(path: Path, out_dir: Path | None = None, opts: RunOptions | None
         from groundplan.summary import write_summary
 
         files.append(write_summary(plan, out_dir / "summary.md"))
+        if opts.render:
+            from groundplan.render.report import write_report
+
+            files.append(write_report(plan, out_dir))
     return RunResult(plan, out_dir, files)
 
 

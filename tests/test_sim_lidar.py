@@ -52,6 +52,18 @@ def test_adjacency_and_openings(sim_run):
 
 
 @pytest.mark.slow
+def test_report_and_render(sim_run, tmp_path):
+    from groundplan.render.plan import render_plan
+    from groundplan.render.report import write_report
+
+    _, plan = sim_run
+    files = render_plan(plan, tmp_path / "plan")
+    assert all(f.exists() and f.stat().st_size > 1000 for f in files)
+    html = write_report(plan, tmp_path).read_text(encoding="utf-8")
+    assert "data:image/png;base64" in html and all(r.id in html for r in plan.rooms)
+
+
+@pytest.mark.slow
 def test_plan_is_schema_valid(sim_run):
     from groundplan.validate import validate_document
 

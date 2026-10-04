@@ -103,7 +103,11 @@ scaled (the Base model: 0.710, log-sd 0.19, no better). So scale is fused from i
 log space with 3-sigma rejection: the calibrated model factor (sigma 0.12), the room's ceiling
 height against a residential prior (0.08), door head heights (0.035 per door), camera height
 (0.10), and an optional A4 sheet (0.015). Video aligns every frame's depth map to the SfM
-reconstruction, which removes the per-frame scale noise and leaves one global factor to fuse.
+reconstruction, which removes the per-frame scale noise and leaves one global factor to fuse. When
+a fast turn splits the reconstruction into several models, each is normalised to depth-model units
+and consecutive models are joined by depth-aided PnP across the gap frames; models that cannot be
+bridged are dropped and reported (on the assessor walkthrough, close-range and fast-turning, all 5
+gaps failed: the video tier then covers one fragment, and says so).
 The photo tier registers a room's photos without texture: in a rectangular room each facing has
 one wall, so wall observations are linear in camera positions, relative scales and wall positions;
 the shared floor-to-ceiling height makes relative scales observable, and a rank check rejects
