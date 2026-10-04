@@ -55,32 +55,44 @@ def _stamp(p: Path) -> float:
     return float(p.stem.rsplit("_", 1)[1])
 
 
-def convert_recording(video_dir: Path, out_dir: Path, tolerance: float = 0.005) -> dict:
-    """One ARKitScenes recording -> a Stray Scanner folder (rgb.mp4, depth/, confidence/,
-    odometry.csv, camera_matrix.csv), keeping the depth frames that have a pose within ``tolerance``
-    seconds (as Apple's own loader does): about 10 frames per second."""
-    import av
-
-    video_dir, out_dir = Path(video_dir), Path(out_dir)
-    vid = video_dir.name
+def frame_rows(video_dir: Path, tolerance: float = 0.005) -> tuple[list[tuple], list[Path]]:
+    """Frames with depth, pose, intrinsics and colour: (t, T_wc y-up, depth png, confidence png,
+    pincam, colour index j); the 1920x1440 video frame of colour frame j is j - 1."""
     stamps, T = read_traj(video_dir / "lowres_wide.traj")
     depth = {round(_stamp(p), 3): p for p in (video_dir / "lowres_depth").glob("*.png")}
     conf = {round(_stamp(p), 3): p for p in (video_dir / "confidence").glob("*.png")}
     intr = {round(_stamp(p), 3): p for p in (video_dir / "lowres_wide_intrinsics").glob("*.pincam")}
-    colour = sorted((video_dir / "lowres_wide").glob("*.png"), key=_stamp)
-    colour_index = {round(_stamp(p), 3): j for j, p in enumerate(colour)}
+    colour_files = sorted((video_dir / "lowres_wide").glob("*.png"), key=_stamp)
+    colour_index = {round(_stamp(p), 3): j for j, p in enumerate(colour_files)}
     keys = np.array(sorted(depth))
     rows = []
     for t, P in zip(stamps, T):
         k = keys[np.argmin(np.abs(keys - t))]
         if abs(k - t) <= tolerance and k in colour_index and k in intr:
-            rows.append((float(k), P, depth[k], conf.get(k), intr[k], colour_index[k] - 1))
-    rows = [r for r in rows if r[5] >= 0]
+            rows.append((float(k), P, depth[k], conf.get(k), intr[k], colour_index[k]))
+    return rows, colour_files
+
+
+def convert_recording(video_dir: Path, out_dir: Path, tolerance: float = 0.005, colour: str = "lowres") -> dict:
+    """One ARKitScenes recording -> a Stray Scanner folder (rgb.mp4, depth/, confidence/,
+    odometry.csv, camera_matrix.csv), keeping the depth frames that have a pose within ``tolerance``
+    seconds (as Apple's own loader does): about 10 frames per second.
+
+    ``colour="lowres"`` takes the recording's own 256x192 colour frames (registered to the depth;
+    seconds to convert); ``"video"`` decodes the 1920x1440 ``.mov`` (minutes: every 60 Hz HEVC frame
+    must be decoded). Colour does not enter the LiDAR geometry; it matters for damage and photos."""
+    import av
+
+    video_dir, out_dir = Path(video_dir), Path(out_dir)
+    vid = video_dir.name
+    rows, colour_files = frame_rows(video_dir, tolerance)
+    if colour == "video":
+        rows = [r for r in rows if r[5] >= 1]  # colour frame j is video frame j - 1
     if len(rows) < 30:
         raise RuntimeError(f"{vid}: only {len(rows)} frames with depth, pose and colour")
     (out_dir / "depth").mkdir(parents=True, exist_ok=True)
     (out_dir / "confidence").mkdir(exist_ok=True)
-    s = 1920 / 256  # colour comes from the 1920x1440 video; intrinsics are given at 256x192
+    s = 1920 / 256 if colour == "video" else 1.0  # intrinsics are given at 256x192
     with open(out_dir / "odometry.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["timestamp", "frame", "x", "y", "z", "qx", "qy", "qz", "qw", "fx", "fy", "cx", "cy"])
@@ -95,30 +107,38 @@ def convert_recording(video_dir: Path, out_dir: Path, tolerance: float = 0.005) 
     _, _, fx, fy, cx, cy = np.loadtxt(rows[0][4])
     K = np.array([[fx * s, 0, (cx + 0.5) * s - 0.5], [0, fy * s, (cy + 0.5) * s - 0.5], [0, 0, 1]])
     np.savetxt(out_dir / "camera_matrix.csv", K, delimiter=",", fmt="%.4f")
-    # one video frame per odometry row, from the full-resolution recording
-    wanted = {r[5]: i for i, r in enumerate(rows)}
-    src = av.open(str(video_dir / f"{vid}.mov"))
-    src.streams.video[0].thread_type = "AUTO"
+    w_px, h_px = (1920, 1440) if colour == "video" else (256, 192)
     dst = av.open(str(out_dir / "rgb.mp4"), "w")
     stream = dst.add_stream("libx264", rate=10)
-    stream.width, stream.height, stream.pix_fmt = 1920, 1440, "yuv420p"
-    stream.options = {"crf": "20", "preset": "veryfast"}
+    stream.width, stream.height, stream.pix_fmt = w_px, h_px, "yuv420p"
+    stream.options = {"crf": "18", "preset": "veryfast"}
+
+    def put(img_rgb: np.ndarray) -> None:
+        for pkt in stream.encode(av.VideoFrame.from_ndarray(img_rgb, format="rgb24")):
+            dst.mux(pkt)
+
     written = 0
-    for j, frame in enumerate(src.decode(video=0)):
-        if j in wanted:
-            img = frame.to_ndarray(format="rgb24")
-            for pkt in stream.encode(av.VideoFrame.from_ndarray(img, format="rgb24")):
-                dst.mux(pkt)
+    if colour == "video":
+        wanted = {r[5] - 1 for r in rows}
+        src = av.open(str(video_dir / f"{vid}.mov"))
+        src.streams.video[0].thread_type = "AUTO"
+        for j, frame in enumerate(src.decode(video=0)):
+            if j in wanted:
+                put(frame.to_ndarray(format="rgb24"))
+                written += 1
+            if j > max(wanted):
+                break
+        src.close()
+    else:
+        for r in rows:
+            put(cv2.cvtColor(cv2.imread(str(colour_files[r[5]])), cv2.COLOR_BGR2RGB))
             written += 1
-        if j > max(wanted):
-            break
     for pkt in stream.encode():
         dst.mux(pkt)
     dst.close()
-    src.close()
     if written != len(rows):
         raise RuntimeError(f"{vid}: wrote {written} video frames for {len(rows)} odometry rows")
-    return {"video_id": vid, "frames": len(rows), "duration_s": round(rows[-1][0] - rows[0][0], 1)}
+    return {"video_id": vid, "frames": len(rows), "duration_s": round(rows[-1][0] - rows[0][0], 1), "colour": colour}
 
 
 # ---------------------------------------------------------------- laser scans -> fused 1 cm cloud

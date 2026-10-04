@@ -236,7 +236,7 @@ def _pick_photos(T: np.ndarray, n: int = 6) -> list[int]:
 
 
 def cmd_tiers(a) -> None:
-    """Per home: the first recording's video as the video tier, stills of the second as the photo tier."""
+    """Per home: the first recording's video as the video tier, 6 stills of the second as the photo tier."""
     import av
     from PIL import Image
 
@@ -255,26 +255,28 @@ def cmd_tiers(a) -> None:
 
                 shutil.copy2(mov, dst)
         src = recs[1] if len(recs) > 1 else recs[0]
-        stray = d / "stray" / f"{visit}_{src.name}"
         pdir = d / "tiers" / visit / "photos" / "01 Room"
         if pdir.exists() and any(pdir.iterdir()):
             continue
         pdir.mkdir(parents=True, exist_ok=True)
-        from groundplan.io.stray import load_stray
-
-        cap = load_stray(stray, require_depth=False)
-        picks = _pick_photos(cap.T_wc)
-        with av.open(str(stray / "rgb.mp4")) as c:
-            for i, frame in enumerate(c.decode(video=0)):
-                if i in picks:
+        rows, _ = A.frame_rows(src)
+        rows = [r for r in rows if r[5] >= 1]
+        picks = _pick_photos(np.stack([r[1] for r in rows]))
+        want = {rows[i][5] - 1: rows[i] for i in picks}  # video frame -> row
+        with av.open(str(src / f"{src.name}.mov")) as c:
+            c.streams.video[0].thread_type = "AUTO"
+            for j, frame in enumerate(c.decode(video=0)):
+                if j in want:
                     img = Image.fromarray(frame.to_ndarray(format="rgb24"))
-                    K = cap.K_rgb[i]
-                    f35 = int(round(K[0, 0] * DIAG_35MM / math.hypot(*img.size)))
+                    _, _, fx, _, _, _ = np.loadtxt(want[j][4])
+                    f35 = int(round(fx * 1920 / 256 * DIAG_35MM / math.hypot(*img.size)))
                     exif = img.getexif()
                     exif[271], exif[272] = "Apple", "iPad Pro 2020 (ARKitScenes)"
                     exif.get_ifd(0x8769)[41989] = f35
-                    img.save(pdir / f"IMG_{i:04d}.jpg", quality=92, exif=exif)
-        print(f"{visit}: video {mov.name}; {len(picks)} photos from {src.name}", flush=True)
+                    img.save(pdir / f"IMG_{j:05d}.jpg", quality=92, exif=exif)
+                if j > max(want):
+                    break
+        print(f"{visit}: video {mov.name}; {len(want)} photos from {src.name}", flush=True)
 
 
 def cmd_manifest(a) -> None:
@@ -284,8 +286,8 @@ def cmd_manifest(a) -> None:
     for visit in visits(d):
         site = f"ark_{visit}"
         gt = PUBLIC / "ground_truth" / f"{site}.yaml"
-        if not gt.exists():
-            continue
+        if not gt.exists() or not (yaml.safe_load(gt.read_text(encoding="utf-8")) or {}).get("rooms"):
+            continue  # no room survived review: nothing to score this home against
         man["sites"][site] = str(gt.relative_to(ROOT)).replace("\\", "/")
         first = None
         for k, vdir in enumerate(recordings(d, visit), start=1):
