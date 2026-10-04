@@ -66,7 +66,11 @@ def match_rooms(plan: Plan, gt: GroundTruth, manual: dict[str, str] | None = Non
         cost = np.zeros((len(preds), len(gt.rooms)))
         for i, p in enumerate(preds):
             for j, g in enumerate(gt.rooms):
-                ga = g.area() or 1.0
+                ga = g.area()
+                if ga is None:  # partial truth (some walls not measurable): compare the walls it lists
+                    pl = np.array([w.length.value for w in p.walls])
+                    cost[i, j] = float(np.mean([np.min(np.abs(pl - w.length)) / w.length for w in g.walls])) * 4                         if g.walls and len(pl) else 9.0
+                    continue
                 cost[i, j] = abs(p.floor_area.value - ga) / ga + np.abs(
                     _signature([w.length.value for w in p.walls]) - _signature([w.length for w in g.walls])
                 ).sum() / max(sum(w.length for w in g.walls[:4]), 1.0)
@@ -84,16 +88,23 @@ def _match_room(pred: Room, gt: GTRoom) -> RoomMatch:
     pl = np.array([w.length.value for w in pred.walls])
     gl = np.array([w.length for w in gt.walls])
     if len(pl) == len(gl) and len(gl) > 0:
-        best = None
+        options = []
         for direction in (1, -1):
             seq = pl if direction == 1 else pl[::-1]
             for shift in range(len(pl)):
-                err = np.abs(np.roll(seq, -shift) - gl).sum()
-                if best is None or err < best[0]:
-                    best = (err, direction, shift)
-        _, direction, shift = best
-        order = list(range(len(pl))) if direction == 1 else list(range(len(pl)))[::-1]
-        order = order[shift:] + order[:shift]
+                order = list(range(len(pl))) if direction == 1 else list(range(len(pl)))[::-1]
+                order = order[shift:] + order[:shift]
+                options.append((float(np.abs(np.roll(seq, -shift) - gl).sum()), order))
+        # a rectangle's walls (a, b, a, b) fit equally well turned by 180 degrees: among alignments
+        # whose lengths fit about as well, take the one under which the most openings correspond
+        best_err = min(o[0] for o in options)
+        near = [o for o in options if o[0] <= best_err + 0.02 * len(gl)]
+
+        def agreement(order):
+            wall_map = {g.id: pred.walls[k].id for g, k in zip(gt.walls, order)}
+            return sum(p.gt is not None and p.pred is not None for p in _match_openings(pred, gt, wall_map))
+
+        _, order = max(near, key=lambda o: (agreement(o[1]), -o[0]))
         m.walls = [WallPair(g.id, pred.walls[k], g.length) for g, k in zip(gt.walls, order)]
     else:
         # different wall counts: each measured wall takes the closest unused predicted wall
