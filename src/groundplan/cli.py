@@ -142,6 +142,12 @@ def bench_calibrate(results: Path = typer.Argument(..., help="results folder con
 
     metrics = json.loads((results / "metrics.json").read_text(encoding="utf-8"))
     rep = fit(metrics)
+    d = rep["depth_scale"]
+    if d["adopted"]:
+        console.print(f"LiDAR depth scale {d['previous']} -> {d['depth_scale']} (held-out mean error "
+                      f"{d['loo_mae_before_m'] * 100:.1f} -> {d['loo_mae_after_m'] * 100:.1f} cm, n={d['n']})")
+    else:
+        console.print(f"LiDAR depth scale kept at {d['previous']}: {d.get('reason', '')}")
     for key, row in rep["loo"].items():
         console.print(f"{key:28} n={row['n']:3d} factor={row['factor'] if row['factor'] is None else round(row['factor'], 3)} "
                       f"LOO coverage={row['loo_coverage']}")

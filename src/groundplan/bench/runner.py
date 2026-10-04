@@ -52,6 +52,7 @@ from groundplan.bench.gates import (
     wall_gate,
 )
 from groundplan.bench.gt import GroundTruth, load_ground_truth
+from groundplan.calib.intervals import load_calibration
 from groundplan.contract import Plan
 
 REPO = Path(__file__).resolve().parents[3]
@@ -167,6 +168,7 @@ def score_benchmark(man: Manifest, out: Path, gts: dict[str, GroundTruth] | None
         "gates": [g.__dict__ for g in gates],
         "repeatability": repeat,
         "calibration": calibration_table(scores),
+        "corrections_used": load_calibration().corrections,  # what bench calibrate fits relative to
         "drift_ablation": drift,
         "timing_s": timing,
     }
