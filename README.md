@@ -139,6 +139,3 @@ Camera for photos and video; Polycam (free tier, Room mode) for the head-to-head
   from Apple by `scripts/arkitscenes.py`, never redistributed; only measurements derived from the laser
   scans and their review renders are committed. Evaluation and calibration only.
 * No dataset was used to train or fine-tune anything.
-
-**Development assistance:** an AI coding assistant (Claude Code) was used while writing this
-repository, as the brief allows; commits it co-authored carry a `Co-Authored-By` trailer.
