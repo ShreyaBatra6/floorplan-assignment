@@ -1,0 +1,55 @@
+# PUBLIC STAND-IN, LiDAR tier only: the fix loop's before/after runs (the declared gate is a LiDAR
+# gate; a full run of all tiers takes ~2.5 h on the development laptop). Derived from manifest.yaml.
+sites:
+  ark_466183: benchmark/public/ground_truth/ark_466183.yaml
+  ark_422378: benchmark/public/ground_truth/ark_422378.yaml
+  ark_471948: benchmark/public/ground_truth/ark_471948.yaml
+options:
+  damage: false
+captures:
+- id: ark_466183_lidar_1
+  site: ark_466183
+  tier: lidar
+  path: arkitscenes/stray/466183_45260920
+- id: ark_466183_lidar_2
+  site: ark_466183
+  tier: lidar
+  path: arkitscenes/stray/466183_45260925
+  repeat_of: ark_466183_lidar_1
+- id: ark_466183_lidar_3
+  site: ark_466183
+  tier: lidar
+  path: arkitscenes/stray/466183_45260928
+  repeat_of: ark_466183_lidar_1
+- id: ark_422378_lidar_1
+  site: ark_422378
+  tier: lidar
+  path: arkitscenes/stray/422378_42447307
+- id: ark_422378_lidar_2
+  site: ark_422378
+  tier: lidar
+  path: arkitscenes/stray/422378_42447308
+  repeat_of: ark_422378_lidar_1
+- id: ark_422378_lidar_3
+  site: ark_422378
+  tier: lidar
+  path: arkitscenes/stray/422378_42447310
+  repeat_of: ark_422378_lidar_1
+- id: ark_471948_lidar_1
+  site: ark_471948
+  tier: lidar
+  path: arkitscenes/stray/471948_47204559
+- id: ark_471948_lidar_2
+  site: ark_471948
+  tier: lidar
+  path: arkitscenes/stray/471948_47204563
+  repeat_of: ark_471948_lidar_1
+- id: ark_471948_lidar_3
+  site: ark_471948
+  tier: lidar
+  path: arkitscenes/stray/471948_47204566
+  repeat_of: ark_471948_lidar_1
+drift_ablation:
+- ark_466183_lidar_1
+- ark_422378_lidar_1
+- ark_471948_lidar_1
