@@ -47,6 +47,13 @@ CPU laptop).
   `docs/BENCHMARK_PROTOCOL.md`; raw data fetched by `scripts/fetch_data.py` with SHA-256 checks.
 * **Synthetic flats** (`src/groundplan/sim/`): ray-cast scenes with exact ground truth used in the
   test suite and for the drift ablation under controlled drift.
+* **ARKitScenes** (Apple; Baruch et al., NeurIPS 2021 Datasets and Benchmarks;
+  [github.com/apple/ARKitScenes](https://github.com/apple/ARKitScenes)), Apple's ARKitScenes
+  license, **non-commercial use**: four homes (iPad Pro 2020 LiDAR recordings, their videos, and the
+  Faro laser scans) as a *public stand-in benchmark* until our own captures exist
+  (`docs/PUBLIC_BENCHMARK.md`). Downloaded from Apple by `scripts/arkitscenes.py`, never
+  redistributed; only the measurements derived from the laser scans and their review renders are
+  committed. Used for evaluation and interval calibration only.
 * No third-party dataset was used to train or fine-tune anything.
 
 ## Prior art consulted
