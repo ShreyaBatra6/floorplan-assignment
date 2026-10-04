@@ -141,7 +141,7 @@ def cmd_before(a) -> int:
         raise SystemExit("commit or stash your changes first: the before-run must come from a committed state")
     sha = git("rev-parse", "--short", "HEAD").stdout.strip()
     git("tag", "-a", BEFORE, "-m", "Fix loop: code state of the before benchmark run")
-    out = ROOT / "benchmark" / "results" / sha
+    out = manifest.parent / "results" / sha  # next to the manifest it scores
     print(f"[before] benchmark at {sha} -> {out.relative_to(ROOT)} (this takes a while) ...", flush=True)
     env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}  # this checkout's code, whatever is installed
     r = subprocess.run([sys.executable, "-m", "groundplan.cli", "bench", "run", "--manifest", str(manifest),
@@ -200,7 +200,7 @@ def cmd_after(a) -> int:
     git("tag", "-a", AFTER, "-m", "Fix loop: code state of the after benchmark run")
     cmd = [sys.executable, str(ROOT / "fixloop" / "run_fixloop.py"), "--before", BEFORE, "--after", AFTER,
            "--manifest", str(Path(a.manifest).resolve())]
-    before_run = ROOT / "benchmark" / "results" / git("rev-parse", "--short", BEFORE).stdout.strip()
+    before_run = Path(a.manifest).resolve().parent / "results" / git("rev-parse", "--short", BEFORE).stdout.strip()
     if not a.fresh and (before_run / "metrics.json").exists():
         cmd += ["--reuse-before", str(before_run)]  # made by `before` at the tagged commit; --fresh redoes it
     r = subprocess.run(cmd, cwd=ROOT)
