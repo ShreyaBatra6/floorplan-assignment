@@ -30,9 +30,33 @@ def test_worst_gate_is_the_furthest_from_its_requirement():
     assert [f["name"] for f in fails] == ["opening widths", "repeatability (a vs b)", "wall lengths"]
 
 
+TEMPLATE = """# Fix declaration
+
+## 1. Worst-performing gate
+
+- Gate: _____________________ (tier: ______)
+
+## 2. Root-cause hypothesis and evidence
+
+- Hypothesis: _____________________
+- Evidence (numbers from the before run, plots, a diagnostic that isolates the cause):
+  1. ...
+- Alternatives considered and why the evidence rules them out: ...
+
+## 3. The fix and the predicted number
+
+- Fix: _____________________ (files: ______)
+- What else could move, and the bound I expect on it: ...
+
+## 4. Outcome (after the fix ships; regenerate with `python fixloop/run_fixloop.py`)
+
+- After-run value: ______ (commit `fixloop-after`)
+"""
+
+
 def test_template_has_blanks_and_a_filled_declaration_has_none():
-    template = (ROOT / "fixloop" / "DECLARATION.md").read_text(encoding="utf-8")
-    assert loop.blanks(template)
+    template = TEMPLATE  # the shipped DECLARATION.md is filled in once the real loop has run
+    assert len(loop.blanks(template)) == 6
     fails = loop.failing_gates(_metrics())
     text = loop.replace_section(template, 1, loop.section1(fails[0], fails[1:], "benchmark/results/abc", "abc"))
     text = loop.replace_section(text, 2, "## 2. Root-cause hypothesis and evidence\n\n- Hypothesis: jambs from "
