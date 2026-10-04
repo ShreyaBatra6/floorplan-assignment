@@ -49,6 +49,20 @@ CPU laptop).
   test suite and for the drift ablation under controlled drift.
 * No third-party dataset was used to train or fine-tune anything.
 
+## Prior art consulted
+
+Before and during development, public repositories from other candidates answering the same brief
+were read (READMEs, design notes and their reported results) to learn which approaches had failed
+on real captures. **No code, text or data was copied from any of them.** Where reading one shaped a
+decision here, the idea was reimplemented from scratch in this codebase's own structures, and it is
+credited below.
+
+| Repository | What reading it told us | What we built (independently) |
+|---|---|---|
+| [suraj2022s/floorplan-case-study](https://github.com/suraj2022s/floorplan-case-study) | Real walkthrough clips fragment under sequential-only SfM and need non-sequential "loop" pairs and joining of partial models. Photo rooms need validity checks: every wall seen, the photographed floor inside the fitted room, and walls seen through doorways rejected. Openings fail when doorways are barely filmed (their protocol shows each doorway for 2 s from 1.5 m). A per-device LiDAR depth-scale factor fitted on laser truth. | Revisit pairs from CLIP appearance retrieval, and relocalisation of partial models by depth-aided PnP with two agreeing frame pairs (`tiers/video.py`). Photo consistency checks with drop-and-rebuild or wider intervals (`tiers/photo.py: verify_room`). Wall-layer choice by support times vertical extent (`tiers/structural.py`). The doorway step of the capture protocol. A depth-scale fit in `bench calibrate`, adopted only if it lowers held-out error. |
+| [Puja-Sah09/propertyscan](https://github.com/Puja-Sah09/propertyscan) | Uses a Letter sheet as a video scale reference. | Our protocol already asked for a sheet; this prompted the floor-plane sheet detector feeding the scale fusion (`tiers/paper.py`). |
+| [suraj-ps25/roomscope](https://github.com/suraj-ps25/roomscope), [Vatsalya001/cozmo-ai-assignment](https://github.com/Vatsalya001/cozmo-ai-assignment), [sachinshekhawat/scanplanai](https://github.com/sachinshekhawat/scanplanai), [Kshaw17-web/Brynz-AI-Engineer](https://github.com/Kshaw17-web/Brynz-AI-Engineer), [keerthika61/room-scan-floorplan](https://github.com/keerthika61/room-scan-floorplan), [raj-judal/floorplan-pipeline](https://github.com/raj-judal/floorplan-pipeline) | Recurring failure modes: no laser truth on own captures, opening widths, video scale, photo rooms that do not stitch, unstable repeatability, LiDAR-only scope. | The benchmark protocol and harness, multi-cue scale fusion, the photo layout solver and the repeatability-first wall selection, all designed for this repository. |
+
 ## External APIs
 
 None. (No cloud vision or language API is called at any point.)

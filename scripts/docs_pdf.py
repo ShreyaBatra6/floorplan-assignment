@@ -126,6 +126,7 @@ def main() -> int:
     import tempfile
 
     profile = tempfile.mkdtemp(prefix="docs_pdf_")
+    pdf.unlink(missing_ok=True)  # otherwise the wait below finds the previous PDF and reports on it
     subprocess.run([browser, "--headless=new", "--disable-gpu", "--no-first-run", f"--user-data-dir={profile}",
                     "--no-pdf-header-footer", f"--print-to-pdf={pdf}", html_path.as_uri()],
                    capture_output=True, timeout=180)

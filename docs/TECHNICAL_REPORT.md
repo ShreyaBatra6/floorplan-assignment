@@ -110,16 +110,31 @@ LiDAR depth on 24 frames per capture, Depth Anything V2 Metric-Indoor-Small: med
 scaled (the Base model: 0.710, log-sd 0.19, no better). So scale is fused from independent cues in
 log space with 3-sigma rejection: the calibrated model factor (sigma 0.12), the room's ceiling
 height against a residential prior (0.08), door head heights (0.035 per door), camera height
-(0.10), and an optional A4 sheet (0.015). Video aligns every frame's depth map to the SfM
-reconstruction, which removes the per-frame scale noise and leaves one global factor to fuse. When
-a fast turn splits the reconstruction into several models, each is normalised to depth-model units
-and consecutive models are joined by depth-aided PnP across the gap frames; models that cannot be
-bridged are dropped and reported (on the assessor walkthrough, close-range and fast-turning, all 5
-gaps failed: the video tier then covers one fragment, and says so).
+(0.10), and an A4/Letter sheet on the floor when one is visible (0.015 if seen in two views,
+0.025 in one). The sheet is found on each view's floor resampled top-down through the floor-plane
+homography, by its side ratio (scale-free), measured with sub-pixel edges, and rejected if its two
+sides disagree or the depth map puts it above the floor (a table top) *(synthetic renders: size
+within 0.2 %)*. Video aligns every frame's depth map to the SfM reconstruction, which removes the
+per-frame scale noise and leaves one global factor to fuse.
+Video SfM breaks into pieces at fast turns past plain walls, so three measures keep a walk whole:
+frames are sampled more densely where optical flow shows the view moving fast; frames that look
+alike but are far apart in time (CLIP similarity in the clip's top 3 %) are matched besides the
+sequential pairs; and partial models, normalised to depth-model units, are relocalised against the
+largest by depth-aided PnP on their most similar frame pairs, accepted only when two pairs agree
+(4 degrees, 0.2 m) and the poses are physically sane (points in front, camera near its partner).
+On the assessor walkthrough (close range, fast turns, plain walls, 15 fps) the frames at each break
+share fewer than 20 geometric inliers even with maximally sensitive features: no join can be
+verified, the largest piece is kept (32 of 178 frames; 14 before) and the rest is reported as
+dropped. A degenerate PnP pose (camera "at infinity" with 63 inliers) was caught there by the
+sanity checks. The protocol (2 s per quarter turn, doorways from both sides) is the real remedy.
 The photo tier registers a room's photos without texture: in a rectangular room each facing has
 one wall, so wall observations are linear in camera positions, relative scales and wall positions;
 the shared floor-to-ceiling height makes relative scales observable, and a rank check rejects
-under-determined solves (unit test: exact recovery).
+under-determined solves (unit test: exact recovery). Per facing, the wall is the layer with the
+largest support x vertical extent (furniture fronts are low; the next room's wall, seen through a
+doorway, is narrow). A room is measured only if its photos agree with it: each camera inside the
+outline and each photo's floor inside it; a photo that disagrees is dropped and the room rebuilt,
+otherwise the room's intervals widen and the warning names the photos.
 
 ## 7. Error budget
 
@@ -145,6 +160,9 @@ Each quantity's interval is scaled by a per-tier split-conformal factor fitted o
 ceil((n+1)(1-alpha))-th score. Coverage is reported **leave-one-capture-out** (fit on the other
 captures, test on the held-out one), which is the number that predicts the walk-in test. Until
 fitted, multipliers are conservative priors and every Measurement says `calibrated: false`.
+Before the interval fit, a systematic LiDAR depth-scale error is estimated (median truth/measured
+over walls and ceilings) and written as a correction only if a factor fitted on the other captures
+lowers the held-out error; the multipliers are then fitted on the corrected values.
 Coverage per tier and quantity: **[bench]**.
 
 ## 9. Benchmark results
@@ -201,3 +219,5 @@ Benchmark hard-case captures (mirror, glass, glossy floor, dimmed room): **[benc
    on two threads for that reason.
 7. Objects lying flat on a wall (a towel, a poster) can pass the protrusion test and be reported as
    damage (one such region on the multi-room assessor capture, after the colour/texture guards).
+8. Video clips with fast turns at close range past plain walls fragment; pieces that cannot be
+   placed with two agreeing frame pairs are dropped and reported, never guessed (section 6).
