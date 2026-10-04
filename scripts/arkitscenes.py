@@ -199,6 +199,8 @@ def cmd_truth(a) -> None:
             if len(keep) == 4:
                 room["floor_area"] = round(float(r["walls"]["S"] * r["walls"]["E"]), 3)
             room["openings"] = ops
+            if dec.get("openings_assessed") is False:
+                room["openings"], room["openings_assessed"] = [], False
             if dec.get("note"):
                 room["review"] = dec["note"]
             doc["rooms"].append(room)
@@ -277,7 +279,8 @@ def cmd_tiers(a) -> None:
 
 def cmd_manifest(a) -> None:
     d = data_dir(a.data)
-    man = {"sites": {}, "captures": [], "drift_ablation": []}
+    # no damage truth exists for these homes, so the damage stage would only cost time
+    man = {"sites": {}, "options": {"damage": False}, "captures": [], "drift_ablation": []}
     for visit in visits(d):
         site = f"ark_{visit}"
         gt = PUBLIC / "ground_truth" / f"{site}.yaml"

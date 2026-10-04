@@ -92,6 +92,7 @@ class GTRoom:
     diagonals: list[float] = field(default_factory=list)
     floor_area: float | None = None
     connector: bool = False
+    openings_assessed: bool = True  # False: the openings could not be established, so none are scored
 
     def area(self) -> float | None:
         """Floor area: given, or from a rectangle's walls (cross-checked with the diagonals)."""
@@ -145,6 +146,7 @@ def parse_ground_truth(doc: dict, source: str = "") -> GroundTruth:
             name=str(r["name"]), walls=walls, ceiling=ceil, ceiling_readings=ceil_r, openings=ops, damage=dmg,
             diagonals=[float(x) for x in r.get("diagonals", [])],
             floor_area=_value(r.get("floor_area"))[0], connector=bool(r.get("connector", False)),
+            openings_assessed=bool(r.get("openings_assessed", True)),
         ))
     adj = [tuple(sorted((str(a), str(b)))) for a, b in doc.get("adjacency", [])]
     return GroundTruth(site=str(doc.get("site", "site")), rooms=rooms, adjacency=adj,

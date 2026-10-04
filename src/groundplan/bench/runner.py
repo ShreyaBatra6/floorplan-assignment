@@ -75,6 +75,7 @@ class Manifest:
     drift_ablation: list[str] = field(default_factory=list)
     head_to_head: dict | None = None
     source: Path | None = None
+    options: dict = field(default_factory=dict)  # run options for every capture, e.g. {damage: false}
 
 
 def load_manifest(path: Path) -> Manifest:
@@ -82,7 +83,7 @@ def load_manifest(path: Path) -> Manifest:
     caps = [CaptureSpec(id=c["id"], site=c["site"], tier=c["tier"], path=c["path"], repeat_of=c.get("repeat_of"),
                         room_map=c.get("room_map")) for c in doc.get("captures", [])]
     return Manifest(sites=doc.get("sites", {}), captures=caps, drift_ablation=doc.get("drift_ablation", []),
-                    head_to_head=doc.get("head_to_head"), source=Path(path))
+                    head_to_head=doc.get("head_to_head"), source=Path(path), options=doc.get("options") or {})
 
 
 def data_root() -> Path:
@@ -102,7 +103,8 @@ def run_benchmark(manifest_path: Path, out: Path, only: list[str] | None = None,
         cap_out = out / cap.id
         if live or not (cap_out / "plan.json").exists():
             t = time.perf_counter()
-            run_capture(data_root() / cap.path, cap_out, RunOptions(tier=cap.tier))
+            run_capture(data_root() / cap.path, cap_out,
+                        RunOptions(tier=cap.tier, damage=bool(man.options.get("damage", True))))
             timing[cap.id] = time.perf_counter() - t
         if cap.id in man.drift_ablation:
             abl = out / f"{cap.id}__no_drift"

@@ -98,7 +98,7 @@ def score_capture(plan: Plan, gt: GroundTruth, capture_id: str, manual: dict[str
             sc.items.append(_item("ceiling_height", rm.gt.name, "ceiling", rm.gt.ceiling, rm.pred.ceiling_height))
         if rm.gt.area() is not None:
             sc.items.append(_item("floor_area", rm.gt.name, "floor", rm.gt.area(), rm.pred.floor_area))
-        for op in rm.openings:
+        for op in rm.openings if rm.gt.openings_assessed else []:  # not assessed: neither misses nor phantoms
             if op.gt is not None:
                 sc.openings_gt += 1
                 if op.pred is None:
@@ -113,7 +113,7 @@ def score_capture(plan: Plan, gt: GroundTruth, capture_id: str, manual: dict[str
     # rooms the plan missed entirely: their openings are all misses
     for name in pm.unmatched_gt:
         sc.openings_gt += len(gt.room(name).openings)
-        sc.openings_missed += len(gt.room(name).openings)
+        sc.openings_missed += len(gt.room(name).openings)  # (empty when the room's openings were not assessed)
 
     # adjacency, in ground-truth room names
     pred_adj = set()
