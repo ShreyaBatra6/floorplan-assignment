@@ -211,7 +211,10 @@ def build_mosaic(surface: SurfaceGeom, views: list[View], res: float = 0.01, top
     good = best_s > 0
     gathered = best_c.astype(np.float32)
     gathered[~good] = np.nan
-    with np.errstate(all="ignore"):
+    import warnings
+
+    with np.errstate(all="ignore"), warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)  # all-NaN columns are simply unobserved pixels
         med = np.nanmedian(gathered, axis=0)
         best_o[~good] = np.nan
         protrusion = np.nanmedian(best_o, axis=0)

@@ -19,6 +19,9 @@ from groundplan.geometry.transforms import PlanFrame
 from groundplan.measure import Estimate
 
 
+ROOM_TYPE_MIN_CONF = 0.6
+
+
 @dataclass
 class DamageResult:
     regions: list[DamageRegion] = field(default_factory=list)
@@ -87,7 +90,12 @@ def classify_rooms(rooms: list[Room], views: list[View], frame: PlanFrame, origi
             types[room.id] = RoomType(label="room", confidence=0.0, source="no view inside the room")
             continue
         label, p = clip.classify_room([cv2.resize(v.image, (336, 252)) for v in pick])
-        types[room.id] = RoomType(label=label, confidence=round(p, 3), source="CLIP zero-shot on views in the room")
+        if p < ROOM_TYPE_MIN_CONF:
+            # a guess would switch on wet-room rules for the wrong rooms: report "room" instead
+            types[room.id] = RoomType(label="room", confidence=round(p, 3),
+                                      source=f"CLIP zero-shot below {ROOM_TYPE_MIN_CONF} confidence (best guess {label})")
+        else:
+            types[room.id] = RoomType(label=label, confidence=round(p, 3), source="CLIP zero-shot on views in the room")
     return types
 
 
@@ -99,7 +107,7 @@ def run_damage(rooms: list[Room], views: list[View], frame: PlanFrame, ctx: Asse
     if params is None and ctx.tier != "lidar":
         # camera-only tiers: poses and depth are noisier, so the geometric filters are weaker; demand a
         # clearer verdict before reporting damage (precision over recall)
-        p = DetectParams(clip_min_prob=0.55, clip_margin=2.0, min_views=2)
+        p = DetectParams(clip_min_prob=0.55, clip_margin=2.5, min_views=2)
     if not views:
         res.notes.append("no images available for damage detection")
         return res
@@ -108,7 +116,7 @@ def run_damage(rooms: list[Room], views: list[View], frame: PlanFrame, ctx: Asse
     n = 0
     for room in rooms:
         for surf in surfaces_for_room(room, frame, ctx.origin, floor_offsets.get(room.id, 0.0)):
-            mosaic = build_mosaic(surf, views, res=0.005 if surf.kind == "wall" else 0.015)
+            mosaic = build_mosaic(surf, views, res=0.006 if surf.kind == "wall" else 0.015, max_views=12)
             if mosaic is None:
                 continue
             res.mosaics.append(mosaic)

@@ -150,7 +150,7 @@ def _apply_room_types(rooms, types) -> None:
     for r in rooms:
         if r.id in types:
             r.type = types[r.id]
-            if types[r.id].confidence > 0 and types[r.id].source != "folder name":
+            if types[r.id].label != "room" and types[r.id].source != "folder name":
                 r.name = types[r.id].label.title()
 
 

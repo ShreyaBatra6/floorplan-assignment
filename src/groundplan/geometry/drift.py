@@ -59,8 +59,9 @@ class DriftParams:
     loop_max_eff_points: int = 150  # cap: neighbouring points share pose/depth errors
     loop_expected_drift_per_sqrt_m: float = 0.012  # plausibility gate on a closure's size
     loop_gate_sigmas: float = 3.0
-    manhattan_sigma_deg: float = 0.5
-    manhattan_min_strength: float = 0.6
+    manhattan_sigma_deg: float = 0.7
+    manhattan_min_strength: float = 0.7
+    entropy_min_gain: float = 0.005
     max_loops: int = 160
 
 
@@ -246,6 +247,19 @@ def correct_drift(cap, keyframes: np.ndarray, poses: np.ndarray, depth_scale: fl
     report["loop_closures_rejected"] = rejected
     _ = all_loops
 
+    # --- self-check: keep the correction only if it makes the map measurably sharper
+    h_raw = map_entropy(subs, np.zeros((n, 4)), apply, global_yaw)
+    h_cor = map_entropy(subs, X, apply, global_yaw)
+    report["map_entropy_raw"] = round(h_raw, 4)
+    report["map_entropy_corrected"] = round(h_cor, 4)
+    if not (h_cor < h_raw - p.entropy_min_gain):
+        report.update(loop_closures=len(loops), max_correction_m=0.0, mean_correction_m=0.0,
+                      notes=(f"correction computed ({len(loops)} closures) but rejected: wall-map entropy "
+                             f"{h_raw:.3f} -> {h_cor:.3f} did not improve, so ARKit poses are kept as the "
+                             "more consistent map"))
+        report["method"] += " (self-checked by wall-map entropy)"
+        return poses, report
+
     # --- interpolate corrections onto keyframes (by walked distance) and apply
     path = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(poses[:, :3, 3], axis=0), axis=1))])
     sp = np.array([s.path_pos for s in subs])
@@ -274,6 +288,41 @@ def correct_drift(cap, keyframes: np.ndarray, poses: np.ndarray, depth_scale: fl
                f"{sum(y is not None for y in yaw_obs)}/{n} submaps"),
     )
     return new, report
+
+
+def map_entropy(subs, X, apply, yaw: float, bin_m: float = 0.01) -> float:
+    """Entropy of wall-point coordinates in the Manhattan frame (lower = walls stack more sharply).
+
+    A consistent map puts every observation of a wall on the same plane, giving narrow histogram
+    peaks; drift doubles or smears them. Used to accept or reject a correction without ground truth.
+    """
+    c, s_ = np.cos(-yaw), np.sin(-yaw)
+    total = 0.0
+    fam = {0: [], 1: []}
+    for i, sm in enumerate(subs):
+        vert = np.abs(sm.normal[:, 1]) < 0.2
+        if vert.sum() < 20:
+            continue
+        pts = apply(X, i, sm.xyz[vert])
+        nr = yaw_rotate(sm.normal[vert], X[i, 0])
+        px, py = pts[:, 0], -pts[:, 2]
+        nx, ny = nr[:, 0], -nr[:, 2]
+        u = c * px - s_ * py
+        v = s_ * px + c * py
+        nu = c * nx - s_ * ny
+        nv = s_ * nx + c * ny
+        fam[0].append(u[np.abs(nu) > 0.9])
+        fam[1].append(v[np.abs(nv) > 0.9])
+    for k in (0, 1):
+        if not fam[k]:
+            continue
+        x = np.concatenate(fam[k])
+        if len(x) < 100:
+            continue
+        hist, _ = np.histogram(x, bins=max(int((x.max() - x.min()) / bin_m), 1))
+        pr = hist[hist > 0] / hist.sum()
+        total += float(-(pr * np.log(pr)).sum())
+    return total
 
 
 def _loop_residual(subs, loops, X, apply) -> float:

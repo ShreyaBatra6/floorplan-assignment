@@ -62,8 +62,8 @@ class DetectParams:
     edge_margin_m: float = 0.04
     crack_min_len_m: float = 0.20
     crack_ridge_k: float = 6.0
-    clip_min_prob: float = 0.40
-    clip_margin: float = 1.5  # damage probability must exceed the best negative x this
+    clip_min_prob: float = 0.45
+    clip_margin: float = 2.0  # damage probability must exceed the best negative x this
     heuristic_conf_cap: float = 0.45
     min_views: int = 2
     skirting_band_m: float = 0.12  # wall base: skirting boards
@@ -210,6 +210,40 @@ def _looks_tiled(m: Mosaic, valid: np.ndarray) -> bool:
     return lines is not None and len(lines) >= 6
 
 
+def _appearance(m: Mosaic, mask: np.ndarray) -> dict[str, float]:
+    """Region vs. its surrounding ring on the mosaic: lightness/colour shift and texture ratio."""
+    lab = cv2.cvtColor(m.image, cv2.COLOR_BGR2LAB).astype(np.float32)
+    ring = ndimage.binary_dilation(mask, iterations=max(int(0.03 / m.res), 3)) & ~mask & m.valid
+    inner = lab[mask]
+    outer = lab[ring] if ring.sum() >= 20 else lab[m.valid]
+    return {
+        "dL": float(inner[:, 0].mean() - outer[:, 0].mean()),
+        "da": float(inner[:, 1].mean() - outer[:, 1].mean()),
+        "db": float(inner[:, 2].mean() - outer[:, 2].mean()),
+        "tex": float(inner[:, 0].std() / max(outer[:, 0].std(), 1.0)),
+    }
+
+
+def consistent(cls: str, app: dict[str, float], m: Mosaic, mask: np.ndarray) -> bool:
+    """Does the measured appearance agree with the class CLIP chose? (precision guard)"""
+    if cls == "water_stain":
+        return app["db"] >= 2.5 or app["dL"] <= -8
+    if cls == "mold":
+        return app["dL"] <= -15 and app["tex"] >= 1.3
+    if cls == "peeling_paint":
+        return app["tex"] >= 1.5
+    if cls == "hole":
+        if app["dL"] > -20:
+            return False
+        if m.protrusion is not None:
+            pr = m.protrusion[mask]
+            pr = pr[np.isfinite(pr)]
+            if pr.size >= 5 and float(np.median(pr)) > -0.005:
+                return False  # a hole lies behind the surface
+        return True
+    return True
+
+
 def _crop(m: Mosaic, c: Candidate) -> np.ndarray:
     r0, r1, c0, c1 = c.bbox
     pad_r = max(int(0.4 * (r1 - r0)), 8)
@@ -302,6 +336,8 @@ def classify(m: Mosaic, cands: list[Candidate], p: DetectParams | None = None, v
             if c.kind_hint == "ridge" and (cls != "crack" or prob < 0.5):
                 continue
             if cls in ("water_stain", "mold", "peeling_paint") and c.mask.sum() * m.res**2 < p.min_stain_area_m2:
+                continue
+            if not consistent(cls, _appearance(m, c.mask), m, c.mask):
                 continue
             if cls == "crack" and c.kind_hint != "ridge" and (
                     _elongation(c.mask) < 4.0 or _thickness(c.mask, m.res) > p.crack_max_thickness_m):

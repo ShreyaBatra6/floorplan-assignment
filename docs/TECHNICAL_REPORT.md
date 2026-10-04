@@ -91,8 +91,16 @@ Ablation *(synthetic, 1 cm/sqrt(m) and 0.4 deg/sqrt(m) incremental drift)*:
 | correction on | 16/16 | 0.6 cm | 100 % | -0.2 % |
 | correction off (poses as-is) | 12/16 | 1.2 cm | 62 % | +0.1 % |
 
-Real multi-room capture, on vs off: **[bench]** (`groundplan bench run` runs the ablation for every
-capture listed under `drift_ablation`).
+**Self-check.** A correction is kept only if it makes the map measurably more consistent: the
+entropy of wall-point coordinates in the Manhattan frame (1 cm histograms per facing) must drop.
+Without ground truth this is the standard consistency measure (doubled walls widen the
+histograms). *(synthetic)* entropy 8.37 -> 7.51, correction kept. *(assessor data, multi-room walk)*
+the computed correction would raise entropy 10.68 -> 11.30, so ARKit's poses are kept, consistent
+with the low ARKit drift other analyses of this capture report; an earlier version without the
+self-check applied a 0.55 m "correction" there, which this check now prevents. On the single-room
+capture: 7.91 -> 7.67, kept (heading anchoring only). Real multi-room capture with laser truth, on
+vs off: **[bench]** (`groundplan bench run` runs the ablation for every capture under
+`drift_ablation`).
 
 ## 6. Metric scale without depth (photo and video)
 
@@ -191,3 +199,5 @@ Benchmark hard-case captures (mirror, glass, glossy floor, dimmed room): **[benc
    wall, so the floor area under it is lost (the outline follows the furniture front).
 6. Memory: an 8 GB laptop is enough only without other heavy processes; structure from motion runs
    on two threads for that reason.
+7. Objects lying flat on a wall (a towel, a poster) can pass the protrusion test and be reported as
+   damage (one such region on the multi-room assessor capture, after the colour/texture guards).
