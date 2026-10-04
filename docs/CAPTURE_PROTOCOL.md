@@ -17,13 +17,13 @@
 6. **Hand-off:** Files app → On My iPhone → Stray Scanner → press and hold the newest folder → **Compress** → AirDrop / USB / cloud the `.zip` to the computer.
 
 ## B · Video: Camera app, one continuous clip
-1. Settings → Camera → Record Video: **4K at 30 fps** (1080p 30 is fine). Turn **off** Action mode and Cinematic. Use the **1×** lens; **never zoom**.
+1. Settings → Camera → Record Video: **1080p at 30 fps**. Turn **off** Action mode and Cinematic. Use the **1×** lens; **never zoom**.
 2. Hold the phone **sideways (landscape)** at chest height. Start recording at the entrance and walk the **same path as A**: slow, along the walls, tilting up to the ceiling line and down to the floor line every 2 steps, 2 s pause at each doorway, every room, back to the start.
 3. **Hand-off:** AirDrop to a Mac, or USB to Windows with Settings → Photos → Transfer to Mac or PC → **Keep Originals**. **Do not send through WhatsApp or other messengers** (they strip the data the pipeline needs).
 
 ## C · Photos: Camera app, one folder per room
 1. Settings → Privacy & Security → Location Services → **Camera → While Using** (the compass stored in each photo helps join rooms). Photo mode, **1×** lens, **no zoom, no Portrait, flash off**. Hold the phone **sideways**.
-2. **Corners:** stand in each corner of the room with your back to it and aim at the **opposite corner**, so the **floor line and ceiling line are both in the picture**. A rectangular room: 4 photos.
+2. **Walls:** stand with your **back against the middle of a wall** and photograph the **opposite wall**, so that **both of its corners, the floor line and the ceiling line** are in the picture. Repeat from the middle of every wall: a rectangular room gives 4 photos.
 3. **Doorways:** for each doorway, stand 1 m inside the room facing it, so the **whole door frame and part of the next room** are in the picture: 1 photo per doorway.
 4. Hallways: one photo from each end looking along it, plus one per doorway. **At most 8 photos per room.**
 5. *Optional, improves accuracy:* lay **one sheet of A4 or Letter paper flat on the floor** where at least two photos of the room show it.

@@ -1,0 +1,26 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev
+      - name: unit tests (no model weights needed)
+        run: uv run pytest -q -m "not slow and not sample and not models"
+      - name: published schema is current
+        run: uv run groundplan schema --out schema/_check.json && uv run python -c "import json,sys; a=json.load(open('schema/_check.json')); b=json.load(open('schema/groundplan.schema.json')); sys.exit(a!=b)"
+      - name: compliance matrix paths exist
+        run: uv run python scripts/compliance.py
+  end-to-end:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev
+      - name: simulated flat, LiDAR tier, exact ground truth
+        run: uv run pytest -q -m "slow and not sample"
