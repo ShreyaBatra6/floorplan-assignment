@@ -28,6 +28,12 @@ uv run groundplan run path/to/photo_folders/          # photos: one sub-folder p
 ```
 
 Windows: `scripts\setup.ps1` does step 1. macOS/Linux: `scripts/setup.sh`.
+
+Timed on a fresh clone (Windows 11, i5-1135G7, 8 GB, CPU only): clone 1 s, `uv sync` 25 s,
+model fetch 8 s, first full run on the assessor LiDAR sample 177 s, total **3.5 min**, with the uv
+and Hugging Face caches already warm. A machine with empty caches also downloads about 1.2 GB
+(PyTorch CPU wheels plus ~0.7 GB of weights): roughly 3-8 more minutes on a typical connection,
+which keeps the whole path under 15 minutes. Example outputs: [`examples/`](examples/).
 If the repository lives in a synced folder (OneDrive, iCloud, Dropbox), put the environment
 outside it: `set UV_PROJECT_ENVIRONMENT=%USERPROFILE%\.venvs\groundplan` (Windows) or
 `export UV_PROJECT_ENVIRONMENT=~/.venvs/groundplan`, otherwise the sync client re-uploads the

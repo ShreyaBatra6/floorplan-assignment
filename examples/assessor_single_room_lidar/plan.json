@@ -1,0 +1,2001 @@
+{
+  "schema_version": "1.0.0",
+  "capture": {
+    "id": "c00a170fe1",
+    "tier": "lidar",
+    "source": "C:\\Users\\shrey\\OneDrive\\Pictures\\Documents\\Brynz\\SampleData\\single_room\\c00a170fe1",
+    "app": "Stray Scanner",
+    "device": null,
+    "started_at": null,
+    "duration_s": 37.17,
+    "frames_total": 1715,
+    "frames_used": 317,
+    "photos_per_room": null,
+    "quality": {
+      "frames_low_light": 0.0,
+      "frames_blurred": 0.0,
+      "mirror_suspected": [],
+      "specular_floor_suspected": false,
+      "notes": []
+    }
+  },
+  "units": {
+    "length": "m",
+    "area": "m2",
+    "angle": "deg"
+  },
+  "confidence_level": 0.9,
+  "calibration": {
+    "version": "prior-0",
+    "fitted": false,
+    "source": "prior: conservative multipliers before any benchmark fit"
+  },
+  "scale": {
+    "source": "lidar",
+    "sigma_log": 0.0,
+    "cues": []
+  },
+  "rooms": [
+    {
+      "id": "R1",
+      "name": "Room 1",
+      "type": {
+        "label": "room",
+        "confidence": 0.0,
+        "source": "no view inside the room"
+      },
+      "is_connector": false,
+      "source": null,
+      "polygon": [
+        [
+          0.0295,
+          0.8538
+        ],
+        [
+          1.4347,
+          0.8538
+        ],
+        [
+          1.4347,
+          1.2698
+        ],
+        [
+          4.4339,
+          1.2698
+        ],
+        [
+          4.4339,
+          3.4138
+        ],
+        [
+          1.429,
+          3.4138
+        ],
+        [
+          1.429,
+          1.4232
+        ],
+        [
+          0.0295,
+          1.4232
+        ]
+      ],
+      "floor_area": {
+        "value": 7.24154,
+        "lo": 5.999972,
+        "hi": 8.483108,
+        "unit": "m2",
+        "confidence": 0.9,
+        "sigma_abs": 0.75482,
+        "sigma_log": 0.0,
+        "method": "polygon area of wall faces",
+        "calibrated": false
+      },
+      "perimeter": {
+        "value": 13.92871,
+        "lo": 12.952005,
+        "hi": 14.905415,
+        "unit": "m",
+        "confidence": 0.9,
+        "sigma_abs": 0.593795,
+        "sigma_log": 0.0,
+        "method": "sum of wall lengths",
+        "calibrated": false
+      },
+      "ceiling_height": {
+        "value": 2.8,
+        "lo": 2.2,
+        "hi": 3.4,
+        "unit": "m",
+        "confidence": 0.9,
+        "sigma_abs": 0.364742,
+        "sigma_log": 0.0,
+        "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+        "calibrated": false
+      },
+      "ceiling_levels": [],
+      "walls": [
+        {
+          "id": "R1-W1",
+          "room_id": "R1",
+          "index": 1,
+          "surface_id": "R1-W1",
+          "start": [
+            0.0295,
+            0.8538
+          ],
+          "end": [
+            1.4347,
+            0.8538
+          ],
+          "length": {
+            "value": 1.405212,
+            "lo": 1.125549,
+            "hi": 1.684876,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.170023,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 270.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.0
+        },
+        {
+          "id": "R1-W2",
+          "room_id": "R1",
+          "index": 2,
+          "surface_id": "R1-W2",
+          "start": [
+            1.4347,
+            0.8538
+          ],
+          "end": [
+            1.4347,
+            1.2698
+          ],
+          "length": {
+            "value": 0.415991,
+            "lo": 0.136524,
+            "hi": 0.695457,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.169904,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 0.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.0
+        },
+        {
+          "id": "R1-W3",
+          "room_id": "R1",
+          "index": 3,
+          "surface_id": "R1-W3",
+          "start": [
+            1.4347,
+            1.2698
+          ],
+          "end": [
+            4.4339,
+            1.2698
+          ],
+          "length": {
+            "value": 2.999143,
+            "lo": 2.604254,
+            "hi": 3.394032,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.240076,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 270.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.797
+        },
+        {
+          "id": "R1-W4",
+          "room_id": "R1",
+          "index": 4,
+          "surface_id": "R1-W4",
+          "start": [
+            4.4339,
+            1.2698
+          ],
+          "end": [
+            4.4339,
+            3.4138
+          ],
+          "length": {
+            "value": 2.144009,
+            "lo": 1.864543,
+            "hi": 2.423476,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.169904,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 0.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.0
+        },
+        {
+          "id": "R1-W5",
+          "room_id": "R1",
+          "index": 5,
+          "surface_id": "R1-W5",
+          "start": [
+            4.4339,
+            3.4138
+          ],
+          "end": [
+            1.429,
+            3.4138
+          ],
+          "length": {
+            "value": 3.004802,
+            "lo": 2.725252,
+            "hi": 3.284352,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.169954,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 90.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.0
+        },
+        {
+          "id": "R1-W6",
+          "room_id": "R1",
+          "index": 6,
+          "surface_id": "R1-W6",
+          "start": [
+            1.429,
+            3.4138
+          ],
+          "end": [
+            1.429,
+            1.4232
+          ],
+          "length": {
+            "value": 1.990632,
+            "lo": 1.595743,
+            "hi": 2.385521,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.240076,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 180.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.571
+        },
+        {
+          "id": "R1-W7",
+          "room_id": "R1",
+          "index": 7,
+          "surface_id": "R1-W7",
+          "start": [
+            1.429,
+            1.4232
+          ],
+          "end": [
+            0.0295,
+            1.4232
+          ],
+          "length": {
+            "value": 1.399553,
+            "lo": 1.379,
+            "hi": 1.420106,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.012495,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 90.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.0
+        },
+        {
+          "id": "R1-W8",
+          "room_id": "R1",
+          "index": 8,
+          "surface_id": "R1-W8",
+          "start": [
+            0.0295,
+            1.4232
+          ],
+          "end": [
+            0.0295,
+            0.8538
+          ],
+          "length": {
+            "value": 0.569368,
+            "lo": 0.174479,
+            "hi": 0.964257,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.240076,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 180.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 1.0
+        }
+      ],
+      "openings": [
+        {
+          "id": "R1-O1",
+          "room_id": "R1",
+          "wall_id": "R1-W4",
+          "kind": "window",
+          "offset": {
+            "value": 0.26,
+            "lo": 0.171128,
+            "hi": 0.348872,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.05403,
+            "sigma_log": 0.0,
+            "method": "distance from wall start corner to near jamb",
+            "calibrated": false
+          },
+          "width": {
+            "value": 0.65,
+            "lo": 0.55373,
+            "hi": 0.74627,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.058528,
+            "sigma_log": 0.0,
+            "method": "ray-crossing gap in the wall face (depth resolution)",
+            "calibrated": false
+          },
+          "height": {
+            "value": 0.720294,
+            "lo": 0.587119,
+            "hi": 0.853469,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.080964,
+            "sigma_log": 0.0,
+            "method": "ray-crossing gap in the wall face",
+            "calibrated": false
+          },
+          "sill_height": {
+            "value": 0.679706,
+            "lo": 0.546531,
+            "hi": 0.812881,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.080964,
+            "sigma_log": 0.0,
+            "method": "floor to sill",
+            "calibrated": false
+          },
+          "connects_to_room_id": "R4",
+          "detection_confidence": 1.0,
+          "evidence": "20304 rays through; solid fraction 0.00"
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "R1-W1",
+          "room_id": "R1",
+          "kind": "wall",
+          "wall_id": "R1-W1",
+          "area": {
+            "value": 3.934594,
+            "lo": 2.4473,
+            "hi": 5.421889,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.904211,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R1-W2",
+          "room_id": "R1",
+          "kind": "wall",
+          "wall_id": "R1-W2",
+          "area": {
+            "value": 1.164774,
+            "lo": 0.297499,
+            "hi": 2.032048,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.527265,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R1-W3",
+          "room_id": "R1",
+          "kind": "wall",
+          "wall_id": "R1-W3",
+          "area": {
+            "value": 8.3976,
+            "lo": 5.480957,
+            "hi": 11.314243,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.773193,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R1-W4",
+          "room_id": "R1",
+          "kind": "wall",
+          "wall_id": "R1-W4",
+          "area": {
+            "value": 6.003226,
+            "lo": 3.921219,
+            "hi": 8.085233,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.265771,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R1-W5",
+          "room_id": "R1",
+          "kind": "wall",
+          "wall_id": "R1-W5",
+          "area": {
+            "value": 8.413446,
+            "lo": 5.598405,
+            "hi": 11.228488,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.711424,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R1-W6",
+          "room_id": "R1",
+          "kind": "wall",
+          "wall_id": "R1-W6",
+          "area": {
+            "value": 5.573768,
+            "lo": 3.468678,
+            "hi": 7.678859,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.279804,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R1-W7",
+          "room_id": "R1",
+          "kind": "wall",
+          "wall_id": "R1-W7",
+          "area": {
+            "value": 3.918748,
+            "lo": 2.658065,
+            "hi": 5.179431,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.766441,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R1-W8",
+          "room_id": "R1",
+          "kind": "wall",
+          "wall_id": "R1-W8",
+          "area": {
+            "value": 1.594232,
+            "lo": 0.375711,
+            "hi": 2.812752,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.740808,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R1-FLOOR",
+          "room_id": "R1",
+          "kind": "floor",
+          "wall_id": null,
+          "area": {
+            "value": 7.24154,
+            "lo": 5.999972,
+            "hi": 8.483108,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.75482,
+            "sigma_log": 0.0,
+            "method": "polygon area of wall faces",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R1-CEILING",
+          "room_id": "R1",
+          "kind": "ceiling",
+          "wall_id": null,
+          "area": {
+            "value": 7.24154,
+            "lo": 5.999972,
+            "hi": 8.483108,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.75482,
+            "sigma_log": 0.0,
+            "method": "polygon area of wall faces",
+            "calibrated": false
+          }
+        }
+      ],
+      "coverage": {
+        "floor_observed_fraction": 0.762,
+        "walls_observed_fraction": 0.294,
+        "ceiling_observed": false
+      }
+    },
+    {
+      "id": "R2",
+      "name": "Bathroom",
+      "type": {
+        "label": "bathroom",
+        "confidence": 0.777,
+        "source": "CLIP zero-shot on views in the room"
+      },
+      "is_connector": false,
+      "source": null,
+      "polygon": [
+        [
+          5.3442,
+          0.0561
+        ],
+        [
+          7.8999,
+          0.0561
+        ],
+        [
+          7.8999,
+          2.0827
+        ],
+        [
+          5.3442,
+          2.0827
+        ]
+      ],
+      "floor_area": {
+        "value": 5.179678,
+        "lo": 5.085469,
+        "hi": 5.273887,
+        "unit": "m2",
+        "confidence": 0.9,
+        "sigma_abs": 0.057275,
+        "sigma_log": 0.0,
+        "method": "polygon area of wall faces",
+        "calibrated": false
+      },
+      "perimeter": {
+        "value": 9.164845,
+        "lo": 9.124559,
+        "hi": 9.205132,
+        "unit": "m",
+        "confidence": 0.9,
+        "sigma_abs": 0.024493,
+        "sigma_log": 0.0,
+        "method": "sum of wall lengths",
+        "calibrated": false
+      },
+      "ceiling_height": {
+        "value": 2.8,
+        "lo": 2.2,
+        "hi": 3.4,
+        "unit": "m",
+        "confidence": 0.9,
+        "sigma_abs": 0.364742,
+        "sigma_log": 0.0,
+        "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+        "calibrated": false
+      },
+      "ceiling_levels": [],
+      "walls": [
+        {
+          "id": "R2-W1",
+          "room_id": "R2",
+          "index": 1,
+          "surface_id": "R2-W1",
+          "start": [
+            5.3442,
+            0.0561
+          ],
+          "end": [
+            7.8999,
+            0.0561
+          ],
+          "length": {
+            "value": 2.555733,
+            "lo": 2.539104,
+            "hi": 2.572363,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.01011,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 270.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 1.0
+        },
+        {
+          "id": "R2-W2",
+          "room_id": "R2",
+          "index": 2,
+          "surface_id": "R2-W2",
+          "start": [
+            7.8999,
+            0.0561
+          ],
+          "end": [
+            7.8999,
+            2.0827
+          ],
+          "length": {
+            "value": 2.02669,
+            "lo": 2.00935,
+            "hi": 2.044029,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.010542,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 0.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 1.0
+        },
+        {
+          "id": "R2-W3",
+          "room_id": "R2",
+          "index": 3,
+          "surface_id": "R2-W3",
+          "start": [
+            7.8999,
+            2.0827
+          ],
+          "end": [
+            5.3442,
+            2.0827
+          ],
+          "length": {
+            "value": 2.555733,
+            "lo": 2.539104,
+            "hi": 2.572363,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.01011,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 90.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.185
+        },
+        {
+          "id": "R2-W4",
+          "room_id": "R2",
+          "index": 4,
+          "surface_id": "R2-W4",
+          "start": [
+            5.3442,
+            2.0827
+          ],
+          "end": [
+            5.3442,
+            0.0561
+          ],
+          "length": {
+            "value": 2.02669,
+            "lo": 2.00935,
+            "hi": 2.044029,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.010542,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 180.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.651
+        }
+      ],
+      "openings": [
+        {
+          "id": "R2-O1",
+          "room_id": "R2",
+          "wall_id": "R2-W1",
+          "kind": "window",
+          "offset": {
+            "value": 1.12,
+            "lo": 0.800409,
+            "hi": 1.439591,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.194297,
+            "sigma_log": 0.0,
+            "method": "distance from wall start corner to near jamb",
+            "calibrated": false
+          },
+          "width": {
+            "value": 0.52,
+            "lo": 0.198273,
+            "hi": 0.841727,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.195596,
+            "sigma_log": 0.0,
+            "method": "ray-crossing gap in the wall face (depth resolution)",
+            "calibrated": false
+          },
+          "height": {
+            "value": 1.5,
+            "lo": 1.350542,
+            "hi": 1.649458,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.090864,
+            "sigma_log": 0.0,
+            "method": "ray-crossing gap in the wall face",
+            "calibrated": false
+          },
+          "sill_height": {
+            "value": 0.16,
+            "lo": 0.010542,
+            "hi": 0.309458,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.090864,
+            "sigma_log": 0.0,
+            "method": "floor to sill",
+            "calibrated": false
+          },
+          "connects_to_room_id": null,
+          "detection_confidence": 0.293,
+          "evidence": "44 rays through; solid fraction 0.00"
+        },
+        {
+          "id": "R2-O2",
+          "room_id": "R2",
+          "wall_id": "R2-W3",
+          "kind": "window",
+          "offset": {
+            "value": 0.21,
+            "lo": 0.152589,
+            "hi": 0.267411,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.034903,
+            "sigma_log": 0.0,
+            "method": "distance from wall start corner to near jamb",
+            "calibrated": false
+          },
+          "width": {
+            "value": 0.83,
+            "lo": 0.761694,
+            "hi": 0.898306,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.041527,
+            "sigma_log": 0.0,
+            "method": "ray-crossing gap in the wall face (depth resolution)",
+            "calibrated": false
+          },
+          "height": {
+            "value": 0.766108,
+            "lo": 0.61665,
+            "hi": 0.915566,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.090864,
+            "sigma_log": 0.0,
+            "method": "ray-crossing gap in the wall face",
+            "calibrated": false
+          },
+          "sill_height": {
+            "value": 0.883892,
+            "lo": 0.734434,
+            "hi": 1.03335,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.090864,
+            "sigma_log": 0.0,
+            "method": "floor to sill",
+            "calibrated": false
+          },
+          "connects_to_room_id": "R3",
+          "detection_confidence": 1.0,
+          "evidence": "22300 rays through; solid fraction 0.00"
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "R2-W1",
+          "room_id": "R2",
+          "kind": "wall",
+          "wall_id": "R2-W1",
+          "area": {
+            "value": 7.156053,
+            "lo": 4.855688,
+            "hi": 9.456417,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.398522,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R2-W2",
+          "room_id": "R2",
+          "kind": "wall",
+          "wall_id": "R2-W2",
+          "area": {
+            "value": 5.674731,
+            "lo": 3.850306,
+            "hi": 7.499156,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.109172,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R2-W3",
+          "room_id": "R2",
+          "kind": "wall",
+          "wall_id": "R2-W3",
+          "area": {
+            "value": 7.156053,
+            "lo": 4.855688,
+            "hi": 9.456417,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.398522,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R2-W4",
+          "room_id": "R2",
+          "kind": "wall",
+          "wall_id": "R2-W4",
+          "area": {
+            "value": 5.674731,
+            "lo": 3.850306,
+            "hi": 7.499156,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.109172,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R2-FLOOR",
+          "room_id": "R2",
+          "kind": "floor",
+          "wall_id": null,
+          "area": {
+            "value": 5.179678,
+            "lo": 5.085469,
+            "hi": 5.273887,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.057275,
+            "sigma_log": 0.0,
+            "method": "polygon area of wall faces",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R2-CEILING",
+          "room_id": "R2",
+          "kind": "ceiling",
+          "wall_id": null,
+          "area": {
+            "value": 5.179678,
+            "lo": 5.085469,
+            "hi": 5.273887,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.057275,
+            "sigma_log": 0.0,
+            "method": "polygon area of wall faces",
+            "calibrated": false
+          }
+        }
+      ],
+      "coverage": {
+        "floor_observed_fraction": 0.932,
+        "walls_observed_fraction": 0.696,
+        "ceiling_observed": false
+      }
+    },
+    {
+      "id": "R3",
+      "name": "Room 3",
+      "type": {
+        "label": "room",
+        "confidence": 0.292,
+        "source": "CLIP zero-shot below 0.6 confidence (best guess bedroom)"
+      },
+      "is_connector": false,
+      "source": null,
+      "polygon": [
+        [
+          5.7739,
+          3.1033
+        ],
+        [
+          7.8746,
+          3.1033
+        ],
+        [
+          7.8746,
+          6.0946
+        ],
+        [
+          5.7739,
+          6.0946
+        ]
+      ],
+      "floor_area": {
+        "value": 6.283997,
+        "lo": 5.46417,
+        "hi": 7.103824,
+        "unit": "m2",
+        "confidence": 0.9,
+        "sigma_abs": 0.498419,
+        "sigma_log": 0.0,
+        "method": "polygon area of wall faces",
+        "calibrated": false
+      },
+      "perimeter": {
+        "value": 10.184156,
+        "lo": 9.638179,
+        "hi": 10.730133,
+        "unit": "m",
+        "confidence": 0.9,
+        "sigma_abs": 0.331931,
+        "sigma_log": 0.0,
+        "method": "sum of wall lengths",
+        "calibrated": false
+      },
+      "ceiling_height": {
+        "value": 2.8,
+        "lo": 2.2,
+        "hi": 3.4,
+        "unit": "m",
+        "confidence": 0.9,
+        "sigma_abs": 0.364742,
+        "sigma_log": 0.0,
+        "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+        "calibrated": false
+      },
+      "ceiling_levels": [],
+      "walls": [
+        {
+          "id": "R3-W1",
+          "room_id": "R3",
+          "index": 1,
+          "surface_id": "R3-W1",
+          "start": [
+            5.7739,
+            3.1033
+          ],
+          "end": [
+            7.8746,
+            3.1033
+          ],
+          "length": {
+            "value": 2.10071,
+            "lo": 1.821173,
+            "hi": 2.380246,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.169946,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 270.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 1.0
+        },
+        {
+          "id": "R3-W2",
+          "room_id": "R3",
+          "index": 2,
+          "surface_id": "R3-W2",
+          "start": [
+            7.8746,
+            3.1033
+          ],
+          "end": [
+            7.8746,
+            6.0946
+          ],
+          "length": {
+            "value": 2.991369,
+            "lo": 2.971863,
+            "hi": 3.010874,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.011858,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 0.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 1.0
+        },
+        {
+          "id": "R3-W3",
+          "room_id": "R3",
+          "index": 3,
+          "surface_id": "R3-W3",
+          "start": [
+            7.8746,
+            6.0946
+          ],
+          "end": [
+            5.7739,
+            6.0946
+          ],
+          "length": {
+            "value": 2.10071,
+            "lo": 1.821173,
+            "hi": 2.380246,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.169946,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 90.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.897
+        },
+        {
+          "id": "R3-W4",
+          "room_id": "R3",
+          "index": 4,
+          "surface_id": "R3-W4",
+          "start": [
+            5.7739,
+            6.0946
+          ],
+          "end": [
+            5.7739,
+            3.1033
+          ],
+          "length": {
+            "value": 2.991369,
+            "lo": 2.971863,
+            "hi": 3.010874,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.011858,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 180.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.0
+        }
+      ],
+      "openings": [],
+      "surfaces": [
+        {
+          "id": "R3-W1",
+          "room_id": "R3",
+          "kind": "wall",
+          "wall_id": "R3-W1",
+          "area": {
+            "value": 5.881987,
+            "lo": 3.835963,
+            "hi": 7.928011,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.243894,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R3-W2",
+          "room_id": "R3",
+          "kind": "wall",
+          "wall_id": "R3-W2",
+          "area": {
+            "value": 8.375832,
+            "lo": 5.683338,
+            "hi": 11.068326,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.63692,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R3-W3",
+          "room_id": "R3",
+          "kind": "wall",
+          "wall_id": "R3-W3",
+          "area": {
+            "value": 5.881987,
+            "lo": 3.835963,
+            "hi": 7.928011,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.243894,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R3-W4",
+          "room_id": "R3",
+          "kind": "wall",
+          "wall_id": "R3-W4",
+          "area": {
+            "value": 8.375832,
+            "lo": 5.683338,
+            "hi": 11.068326,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.63692,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R3-FLOOR",
+          "room_id": "R3",
+          "kind": "floor",
+          "wall_id": null,
+          "area": {
+            "value": 6.283997,
+            "lo": 5.46417,
+            "hi": 7.103824,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.498419,
+            "sigma_log": 0.0,
+            "method": "polygon area of wall faces",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R3-CEILING",
+          "room_id": "R3",
+          "kind": "ceiling",
+          "wall_id": null,
+          "area": {
+            "value": 6.283997,
+            "lo": 5.46417,
+            "hi": 7.103824,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.498419,
+            "sigma_log": 0.0,
+            "method": "polygon area of wall faces",
+            "calibrated": false
+          }
+        }
+      ],
+      "coverage": {
+        "floor_observed_fraction": 0.207,
+        "walls_observed_fraction": 0.685,
+        "ceiling_observed": false
+      }
+    },
+    {
+      "id": "R4",
+      "name": "Bathroom",
+      "type": {
+        "label": "bathroom",
+        "confidence": 0.868,
+        "source": "CLIP zero-shot on views in the room"
+      },
+      "is_connector": false,
+      "source": null,
+      "polygon": [
+        [
+          4.4452,
+          1.4246
+        ],
+        [
+          5.4694,
+          1.4246
+        ],
+        [
+          5.4694,
+          3.1052
+        ],
+        [
+          5.8139,
+          3.1052
+        ],
+        [
+          5.8139,
+          3.9338
+        ],
+        [
+          4.4452,
+          3.9338
+        ]
+      ],
+      "floor_area": {
+        "value": 2.855282,
+        "lo": 2.371986,
+        "hi": 3.338577,
+        "unit": "m2",
+        "confidence": 0.9,
+        "sigma_abs": 0.293823,
+        "sigma_log": 0.0,
+        "method": "polygon area of wall faces",
+        "calibrated": false
+      },
+      "perimeter": {
+        "value": 7.755712,
+        "lo": 6.913292,
+        "hi": 8.598131,
+        "unit": "m",
+        "confidence": 0.9,
+        "sigma_abs": 0.512155,
+        "sigma_log": 0.0,
+        "method": "sum of wall lengths",
+        "calibrated": false
+      },
+      "ceiling_height": {
+        "value": 2.8,
+        "lo": 2.2,
+        "hi": 3.4,
+        "unit": "m",
+        "confidence": 0.9,
+        "sigma_abs": 0.364742,
+        "sigma_log": 0.0,
+        "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+        "calibrated": false
+      },
+      "ceiling_levels": [],
+      "walls": [
+        {
+          "id": "R4-W1",
+          "room_id": "R4",
+          "index": 1,
+          "surface_id": "R4-W1",
+          "start": [
+            4.4452,
+            1.4246
+          ],
+          "end": [
+            5.4694,
+            1.4246
+          ],
+          "length": {
+            "value": 1.024159,
+            "lo": 1.006563,
+            "hi": 1.041755,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.010698,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 270.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 1.0
+        },
+        {
+          "id": "R4-W2",
+          "room_id": "R4",
+          "index": 2,
+          "surface_id": "R4-W2",
+          "start": [
+            5.4694,
+            1.4246
+          ],
+          "end": [
+            5.4694,
+            3.1052
+          ],
+          "length": {
+            "value": 1.680558,
+            "lo": 1.664235,
+            "hi": 1.696881,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.009924,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 0.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.624
+        },
+        {
+          "id": "R4-W3",
+          "room_id": "R4",
+          "index": 3,
+          "surface_id": "R4-W3",
+          "start": [
+            5.4694,
+            3.1052
+          ],
+          "end": [
+            5.8139,
+            3.1052
+          ],
+          "length": {
+            "value": 0.344501,
+            "lo": 0.065029,
+            "hi": 0.623974,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.169907,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 270.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 1.0
+        },
+        {
+          "id": "R4-W4",
+          "room_id": "R4",
+          "index": 4,
+          "surface_id": "R4-W4",
+          "start": [
+            5.8139,
+            3.1052
+          ],
+          "end": [
+            5.8139,
+            3.9338
+          ],
+          "length": {
+            "value": 0.828638,
+            "lo": 0.549171,
+            "hi": 1.108104,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.169903,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 0.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.0
+        },
+        {
+          "id": "R4-W5",
+          "room_id": "R4",
+          "index": 5,
+          "surface_id": "R4-W5",
+          "start": [
+            5.8139,
+            3.9338
+          ],
+          "end": [
+            4.4452,
+            3.9338
+          ],
+          "length": {
+            "value": 1.36866,
+            "lo": 1.089121,
+            "hi": 1.648199,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.169948,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 90.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.0
+        },
+        {
+          "id": "R4-W6",
+          "room_id": "R4",
+          "index": 6,
+          "surface_id": "R4-W6",
+          "start": [
+            4.4452,
+            3.9338
+          ],
+          "end": [
+            4.4452,
+            1.4246
+          ],
+          "length": {
+            "value": 2.509196,
+            "lo": 2.229727,
+            "hi": 2.788664,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.169905,
+            "sigma_log": 0.0,
+            "method": "wall-face plane intersections",
+            "calibrated": false
+          },
+          "height": {
+            "value": 2.8,
+            "lo": 2.2,
+            "hi": 3.4,
+            "unit": "m",
+            "confidence": 0.9,
+            "sigma_abs": 0.364742,
+            "sigma_log": 0.0,
+            "method": "unobserved: bounded prior (ceiling never seen; lower bound = highest wall point)",
+            "calibrated": false
+          },
+          "outward_normal_deg": 180.0,
+          "adjacent_room_id": null,
+          "thickness": null,
+          "observed_fraction": 0.418
+        }
+      ],
+      "openings": [],
+      "surfaces": [
+        {
+          "id": "R4-W1",
+          "room_id": "R4",
+          "kind": "wall",
+          "wall_id": "R4-W1",
+          "area": {
+            "value": 2.867645,
+            "lo": 1.944827,
+            "hi": 3.790462,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.561033,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R4-W2",
+          "room_id": "R4",
+          "kind": "wall",
+          "wall_id": "R4-W2",
+          "area": {
+            "value": 4.705563,
+            "lo": 3.192601,
+            "hi": 6.218524,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.919815,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R4-W3",
+          "room_id": "R4",
+          "kind": "wall",
+          "wall_id": "R4-W3",
+          "area": {
+            "value": 0.964604,
+            "lo": 0.123081,
+            "hi": 1.806126,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.51161,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R4-W4",
+          "room_id": "R4",
+          "kind": "wall",
+          "wall_id": "R4-W4",
+          "area": {
+            "value": 2.320185,
+            "lo": 1.239399,
+            "hi": 3.400972,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.657072,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R4-W5",
+          "room_id": "R4",
+          "kind": "wall",
+          "wall_id": "R4-W5",
+          "area": {
+            "value": 3.832248,
+            "lo": 2.373006,
+            "hi": 5.291491,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.887156,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R4-W6",
+          "room_id": "R4",
+          "kind": "wall",
+          "wall_id": "R4-W6",
+          "area": {
+            "value": 7.025748,
+            "lo": 4.63599,
+            "hi": 9.415505,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 1.452869,
+            "sigma_log": 0.0,
+            "method": "wall length x wall height",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R4-FLOOR",
+          "room_id": "R4",
+          "kind": "floor",
+          "wall_id": null,
+          "area": {
+            "value": 2.855282,
+            "lo": 2.371986,
+            "hi": 3.338577,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.293823,
+            "sigma_log": 0.0,
+            "method": "polygon area of wall faces",
+            "calibrated": false
+          }
+        },
+        {
+          "id": "R4-CEILING",
+          "room_id": "R4",
+          "kind": "ceiling",
+          "wall_id": null,
+          "area": {
+            "value": 2.855282,
+            "lo": 2.371986,
+            "hi": 3.338577,
+            "unit": "m2",
+            "confidence": 0.9,
+            "sigma_abs": 0.293823,
+            "sigma_log": 0.0,
+            "method": "polygon area of wall faces",
+            "calibrated": false
+          }
+        }
+      ],
+      "coverage": {
+        "floor_observed_fraction": 0.802,
+        "walls_observed_fraction": 0.447,
+        "ceiling_observed": false
+      }
+    }
+  ],
+  "stitched": {
+    "frame": "plan metres, x right / y up, Manhattan-aligned to the dominant wall direction",
+    "room_ids": [
+      "R1",
+      "R2",
+      "R3",
+      "R4"
+    ],
+    "adjacency": [],
+    "footprint_area": {
+      "value": 21.560497,
+      "lo": 19.203977,
+      "hi": 23.917017,
+      "unit": "m2",
+      "confidence": 0.9,
+      "sigma_abs": 1.432662,
+      "sigma_log": 0.0,
+      "method": "sum of room floor areas",
+      "calibrated": false
+    },
+    "bounding_box_width": {
+      "value": 7.8704,
+      "lo": 7.856203,
+      "hi": 7.884597,
+      "unit": "m",
+      "confidence": 0.9,
+      "sigma_abs": 0.008631,
+      "sigma_log": 0.0,
+      "method": "extent of stitched plan",
+      "calibrated": false
+    },
+    "bounding_box_depth": {
+      "value": 6.0385,
+      "lo": 6.024303,
+      "hi": 6.052697,
+      "unit": "m",
+      "confidence": 0.9,
+      "sigma_abs": 0.008631,
+      "sigma_log": 0.0,
+      "method": "extent of stitched plan",
+      "calibrated": false
+    },
+    "overlaps": [
+      {
+        "room_a": "R2",
+        "room_b": "R4",
+        "area_m2": 0.0824
+      },
+      {
+        "room_a": "R3",
+        "room_b": "R4",
+        "area_m2": 0.0331
+      }
+    ],
+    "stitch_method": "single continuous capture: rooms share one (drift-corrected) world frame",
+    "drift": {
+      "enabled": true,
+      "method": "4-DoF submap pose graph: odometry + ICP loop closures + Manhattan plane anchoring",
+      "submaps": 21,
+      "loop_closures": 0,
+      "max_correction_m": 0.1129,
+      "mean_correction_m": 0.0346,
+      "notes": "37 closure candidates tested, 0 accepted (1 rejected as inconsistent); loop residual 0.0 mm -> 0.0 mm; max heading correction 0.67 deg; Manhattan anchors on 16/21 submaps"
+    }
+  },
+  "damage_regions": [],
+  "concealed_damage_flags": [],
+  "scope": [],
+  "warnings": [
+    "ceiling not observed in this capture; ceiling heights are bounded by priors",
+    "floor surfaces are not assessed visually (rugs, mats and furniture make floor staining unreliable); floor-level water is flagged through wall-base staining (rule CDR-02)",
+    "ceilings not observed: no ceiling damage could be assessed",
+    "R1: ceiling not observed; reported as a bounded prior interval",
+    "R2: ceiling not observed; reported as a bounded prior interval",
+    "R3: ceiling not observed; reported as a bounded prior interval",
+    "R4: ceiling not observed; reported as a bounded prior interval"
+  ],
+  "runtime": {
+    "groundplan_version": "0.1.0",
+    "git_commit": "19bb1efbf51d",
+    "started_at": "2026-10-04T18:03:41+00:00",
+    "total_s": 164.548,
+    "stages": {
+      "ingest": 0.304,
+      "drift": 6.073,
+      "fuse": 5.057,
+      "layout": 12.406,
+      "assemble": 0.083,
+      "damage": 131.049,
+      "render": 6.328
+    },
+    "machine": "Windows AMD64 · Intel64 Family 6 Model 140 Stepping 1, GenuineIntel · 8 threads",
+    "model_cache": "mixed"
+  }
+}
