@@ -1,0 +1,37 @@
+# PUBLIC STAND-IN: ground truth of ARKitScenes visit 422378, measured on its laser scans
+# (not tape or laser on site). Review: benchmark/public/review/422378_*.png
+site: ark_422378
+instrument: Faro Focus S70 laser scans from ARKitScenes, measured by scripts/arkitscenes.py
+  truth (planes fitted to the scans; see the review renders)
+source_scans:
+- '173870'
+- '173873'
+rooms:
+- name: room2
+  walls:
+  - id: E
+    length: 3.2796
+  - id: N
+    length: 3.2565
+  ceiling: 2.2918
+  openings:
+  - id: D1
+    wall: S
+    kind: door
+    width: 0.79
+    height: 2.25
+    offset: 2.44
+    sill: null
+  - id: N2
+    wall: W
+    kind: window
+    width: 1.77
+    height: 0.73
+    offset: 0.86
+    sill: 1.28
+  review: Wall S has a 10 cm step (y = -2.33 m west of x = 1.0 m, -2.43 m east of
+    it), so the W wall is 3.20 m long, not the box's 3.28 m, and S is two segments.
+    N and E (to the deeper segment) and the ceiling are well defined. D1 (0.79 m,
+    open to the ceiling, beside the E wall) and N2 (1.77 m window, sill 1.27 m) checked
+    on the render.
+adjacency: []

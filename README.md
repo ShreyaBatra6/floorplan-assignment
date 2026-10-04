@@ -16,7 +16,7 @@ concealed-damage flags that name the rule that fired, a scope of work keyed to s
 
 ```bash
 # 1. get the code and an isolated environment (uv installs Python 3.11 itself)
-git clone <this repo> groundplan && cd groundplan
+git clone https://github.com/ShreyaBatra6/floorplan-assignment.git groundplan && cd groundplan
 python -m pip install uv          # or see https://docs.astral.sh/uv/
 uv sync --extra models --extra video
 uv run python scripts/fetch_models.py      # depth + CLIP weights (~0.6 GB, Hugging Face)
@@ -100,5 +100,7 @@ tests/            unit + end-to-end tests (synthetic flats with exact ground tru
 scripts/          setup, model/data fetch, development helpers
 ```
 
+Public stand-in benchmark (ARKitScenes homes with laser-scan truth, until our own captures exist):
+[`docs/PUBLIC_BENCHMARK.md`](docs/PUBLIC_BENCHMARK.md).
 Disclosures of every pretrained model, dataset and tool: [`docs/MODELS_AND_DATA.md`](docs/MODELS_AND_DATA.md).
 Requirement-by-requirement status: [`docs/COMPLIANCE_MATRIX.md`](docs/COMPLIANCE_MATRIX.md).

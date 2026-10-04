@@ -1,0 +1,54 @@
+# Review decisions on the laser-measured ground truth (scripts/arkitscenes.py truth proposes, a person
+# checks every render in this folder and records here what is not a valid measurement, and why).
+# exclude_walls: wall lengths a box cannot define; exclude_openings: detections that are not openings;
+# exclude_room: the room as a whole.
+
+466183:
+  room1:
+    exclude_walls: [E, W]
+    exclude_openings: [P1]
+    openings_assessed: false
+    note: >-
+      Chimney breast with an alcove on each side of wall S: the E and W walls run on to the alcove
+      backs (about 0.33 m beyond the breast), so their box lengths are not their lengths. S and N
+      (between the side walls) and the ceiling are well defined. P1 is the right-hand alcove, not an
+      opening. The W wall's two full-height glazed doors (above 2.6 m) and the N wall's corner
+      opening cannot be classified or measured cleanly from the scan, so this room's openings are
+      not assessed (no misses or phantoms are scored for it).
+
+422378:
+  room1:
+    exclude_room: >-
+      Measured from the scanner in the room's south-west part, the east "wall" is the side of a short
+      partition at x = 1.6 m; the room itself is room2 (seen from the second scanner position).
+  room2:
+    exclude_walls: [S, W]
+    note: >-
+      Wall S has a 10 cm step (y = -2.33 m west of x = 1.0 m, -2.43 m east of it), so the W wall is
+      3.20 m long, not the box's 3.28 m, and S is two segments. N and E (to the deeper segment) and
+      the ceiling are well defined. D1 (0.79 m, open to the ceiling, beside the E wall) and N2
+      (1.77 m window, sill 1.27 m) checked on the render.
+
+471948:
+  room1:
+    exclude_room: >-
+      Seen from the southern scanner, the east "wall" is the back of a 35 cm closet niche that runs
+      along the lower half of the east side; the same room is room2.
+  room2:
+    exclude_walls: [S, N, E]
+    openings_assessed: false
+    note: >-
+      Narrow room with a closet niche on the east side (east plane at x = 0.03 m above y = 1.3 m,
+      0.38 m below), so S, N and E have no single length. The W wall (2.752 m, straight over the full
+      length) and the ceiling are well defined. Openings not assessed: the corridor doorway in the N
+      wall has its east jamb hidden from both scanner positions, and N2 (0.20 m) is not an opening;
+      the S window N1 (0.60 m) is real but a room's openings are scored all or nothing.
+
+437450:
+  room1:
+    exclude_room: >-
+      Open-plan space with built-in units that reach the ceiling: the 1.16 m wide "rooms" found from
+      both scanner positions are passages between units, not rooms. A box cannot describe this
+      space, so the home is left out.
+  room2:
+    exclude_room: same space as room1, seen from the second scanner position.

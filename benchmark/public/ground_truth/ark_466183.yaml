@@ -1,0 +1,26 @@
+# PUBLIC STAND-IN: ground truth of ARKitScenes visit 466183, measured on its laser scans
+# (not tape or laser on site). Review: benchmark/public/review/466183_*.png
+site: ark_466183
+instrument: Faro Focus S70 laser scans from ARKitScenes, measured by scripts/arkitscenes.py
+  truth (planes fitted to the scans; see the review renders)
+source_scans:
+- '177235'
+- '177240'
+rooms:
+- name: room1
+  walls:
+  - id: S
+    length: 4.9803
+  - id: N
+    length: 4.9803
+  ceiling: 2.9744
+  openings: []
+  openings_assessed: false
+  review: 'Chimney breast with an alcove on each side of wall S: the E and W walls
+    run on to the alcove backs (about 0.33 m beyond the breast), so their box lengths
+    are not their lengths. S and N (between the side walls) and the ceiling are well
+    defined. P1 is the right-hand alcove, not an opening. The W wall''s two full-height
+    glazed doors (above 2.6 m) and the N wall''s corner opening cannot be classified
+    or measured cleanly from the scan, so this room''s openings are not assessed (no
+    misses or phantoms are scored for it).'
+adjacency: []

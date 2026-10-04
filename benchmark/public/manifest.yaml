@@ -1,0 +1,80 @@
+# PUBLIC STAND-IN benchmark: ARKitScenes homes (iPad Pro 2020) with laser-scan ground truth.
+# Raw data: python scripts/arkitscenes.py fetch/convert/tiers; set GROUNDPLAN_DATA to the folder
+# that contains arkitscenes/. Not the case study's own captures (see docs/PUBLIC_BENCHMARK.md).
+sites:
+  ark_466183: benchmark/public/ground_truth/ark_466183.yaml
+  ark_422378: benchmark/public/ground_truth/ark_422378.yaml
+  ark_471948: benchmark/public/ground_truth/ark_471948.yaml
+options:
+  damage: false
+captures:
+- id: ark_466183_lidar_1
+  site: ark_466183
+  tier: lidar
+  path: arkitscenes/stray/466183_45260920
+- id: ark_466183_lidar_2
+  site: ark_466183
+  tier: lidar
+  path: arkitscenes/stray/466183_45260925
+  repeat_of: ark_466183_lidar_1
+- id: ark_466183_lidar_3
+  site: ark_466183
+  tier: lidar
+  path: arkitscenes/stray/466183_45260928
+  repeat_of: ark_466183_lidar_1
+- id: ark_466183_video_1
+  site: ark_466183
+  tier: video
+  path: arkitscenes/tiers/466183/video/45260920.mov
+- id: ark_466183_photo_1
+  site: ark_466183
+  tier: photo
+  path: arkitscenes/tiers/466183/photos
+- id: ark_422378_lidar_1
+  site: ark_422378
+  tier: lidar
+  path: arkitscenes/stray/422378_42447307
+- id: ark_422378_lidar_2
+  site: ark_422378
+  tier: lidar
+  path: arkitscenes/stray/422378_42447308
+  repeat_of: ark_422378_lidar_1
+- id: ark_422378_lidar_3
+  site: ark_422378
+  tier: lidar
+  path: arkitscenes/stray/422378_42447310
+  repeat_of: ark_422378_lidar_1
+- id: ark_422378_video_1
+  site: ark_422378
+  tier: video
+  path: arkitscenes/tiers/422378/video/42447307.mov
+- id: ark_422378_photo_1
+  site: ark_422378
+  tier: photo
+  path: arkitscenes/tiers/422378/photos
+- id: ark_471948_lidar_1
+  site: ark_471948
+  tier: lidar
+  path: arkitscenes/stray/471948_47204559
+- id: ark_471948_lidar_2
+  site: ark_471948
+  tier: lidar
+  path: arkitscenes/stray/471948_47204563
+  repeat_of: ark_471948_lidar_1
+- id: ark_471948_lidar_3
+  site: ark_471948
+  tier: lidar
+  path: arkitscenes/stray/471948_47204566
+  repeat_of: ark_471948_lidar_1
+- id: ark_471948_video_1
+  site: ark_471948
+  tier: video
+  path: arkitscenes/tiers/471948/video/47204559.mov
+- id: ark_471948_photo_1
+  site: ark_471948
+  tier: photo
+  path: arkitscenes/tiers/471948/photos
+drift_ablation:
+- ark_466183_lidar_1
+- ark_422378_lidar_1
+- ark_471948_lidar_1

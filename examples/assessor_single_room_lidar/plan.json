@@ -3,7 +3,7 @@
   "capture": {
     "id": "c00a170fe1",
     "tier": "lidar",
-    "source": "C:\\Users\\shrey\\OneDrive\\Pictures\\Documents\\Brynz\\SampleData\\single_room\\c00a170fe1",
+    "source": "SampleData/single_room/c00a170fe1",
     "app": "Stray Scanner",
     "device": null,
     "started_at": null,

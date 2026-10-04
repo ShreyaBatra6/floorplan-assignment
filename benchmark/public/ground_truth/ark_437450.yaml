@@ -1,0 +1,11 @@
+# PUBLIC STAND-IN: ground truth of ARKitScenes visit 437450, measured on its laser scans
+# (not tape or laser on site). Review: benchmark/public/review/437450_*.png
+site: ark_437450
+instrument: Faro Focus S70 laser scans from ARKitScenes, measured by scripts/arkitscenes.py
+  truth (planes fitted to the scans; see the review renders)
+source_scans:
+- '173968'
+- '173970'
+- '173972'
+rooms: []
+adjacency: []

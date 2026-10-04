@@ -1,0 +1,23 @@
+# PUBLIC STAND-IN: ground truth of ARKitScenes visit 471948, measured on its laser scans
+# (not tape or laser on site). Review: benchmark/public/review/471948_*.png
+site: ark_471948
+instrument: Faro Focus S70 laser scans from ARKitScenes, measured by scripts/arkitscenes.py
+  truth (planes fitted to the scans; see the review renders)
+source_scans:
+- '204319'
+- '204322'
+rooms:
+- name: room2
+  walls:
+  - id: W
+    length: 2.7525
+  ceiling: 2.3705
+  openings: []
+  openings_assessed: false
+  review: 'Narrow room with a closet niche on the east side (east plane at x = 0.03
+    m above y = 1.3 m, 0.38 m below), so S, N and E have no single length. The W wall
+    (2.752 m, straight over the full length) and the ceiling are well defined. Openings
+    not assessed: the corridor doorway in the N wall has its east jamb hidden from
+    both scanner positions, and N2 (0.20 m) is not an opening; the S window N1 (0.60
+    m) is real but a room''s openings are scored all or nothing.'
+adjacency: []
