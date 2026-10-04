@@ -59,6 +59,12 @@ def _git_commit() -> str | None:
         return None
 
 
+def _cache_state() -> str:
+    from groundplan.models.registry import cache_stats
+
+    return cache_stats()
+
+
 def _machine() -> str:
     return f"{platform.system()} {platform.machine()} · {platform.processor() or 'cpu'} · {os.cpu_count()} threads"
 
@@ -92,6 +98,7 @@ def run_capture(path: Path, out_dir: Path | None = None, opts: RunOptions | None
         ctx = AssembleContext(tier="lidar", scale_sigma=0.0, budget=BUDGETS["lidar"])
         drift = res.drift_report
         stitch_method = "single continuous capture: rooms share one (drift-corrected) world frame"
+        lidar_res = res
     else:
         raise NotImplementedError(f"the {tier} tier is not wired up yet")
 
@@ -107,6 +114,29 @@ def run_capture(path: Path, out_dir: Path | None = None, opts: RunOptions | None
             warnings.append(f"{r.id}: ceiling not observed; reported as a bounded prior interval")
     stages["assemble"] = time.perf_counter() - t
 
+    regions, flags, scope_items = [], [], []
+    if opts.damage:
+        t = time.perf_counter()
+        from groundplan.damage.pipeline import run_damage
+        from groundplan.models.registry import set_cache
+
+        set_cache(opts.use_cache)
+        views = []
+        if tier == "lidar":
+            from groundplan.tiers.lidar import collect_views
+
+            views = collect_views(lidar_res.capture, lidar_res.keyframes, lidar_res.T_wc_used)
+        offsets = {f"R{k}": g.floor_y - layout.frame.floor_y for k, g in enumerate(layout.rooms, start=1)}
+        dmg = run_damage(rooms, views, layout.frame, ctx, offsets, out_dir)
+        for r in rooms:
+            if r.id in dmg.room_types:
+                r.type = dmg.room_types[r.id]
+                if dmg.room_types[r.id].confidence > 0:
+                    r.name = dmg.room_types[r.id].label.title()
+        regions, flags, scope_items = dmg.regions, dmg.flags, dmg.scope
+        warnings += dmg.notes
+        stages["damage"] = time.perf_counter() - t
+
     cal = load_calibration()
     plan = Plan(
         schema_version=SCHEMA_VERSION,
@@ -115,9 +145,12 @@ def run_capture(path: Path, out_dir: Path | None = None, opts: RunOptions | None
         scale=scale,
         rooms=rooms,
         stitched=stitched,
+        damage_regions=regions,
+        concealed_damage_flags=flags,
+        scope=scope_items,
         warnings=sorted(set(warnings), key=warnings.index),
         runtime=Runtime(groundplan_version=__version__, git_commit=_git_commit(), started_at=started,
-                        total_s=0.0, stages={}, machine=_machine()),
+                        total_s=0.0, stages={}, machine=_machine(), model_cache=_cache_state()),
     )
     errors = semantic_errors(plan)
     if errors:

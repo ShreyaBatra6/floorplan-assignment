@@ -133,9 +133,13 @@ def build_scope(rooms: list[Room], regions: list[DamageRegion], flags: list[Conc
                     painted.add(surf)
                     b.add("PNT-CEIL", "Seal and paint ceiling", room.id, surf, As, area_m.value, "m2", "ceiling area",
                           [d.id], fids)
-            else:
+            elif d.damage_class in ("water_stain", "mold"):
                 b.add("WTR-FLOOR", "Moisture-map floor; lift and dry covering in the affected area", room.id, surf,
                       a_s * 4, d.area.value * 4, "m2", "4x visible area (wicking spreads under covering)", [d.id], fids)
+            else:
+                label = d.damage_class.replace("_", " ")
+                b.add("FLR-REP", f"Repair floor finish ({label})", room.id, surf,
+                      a_s + 0.1, d.area.value + 0.1, "m2", "visible area + 0.1 m2", [d.id], fids)
     # one drying/verification line per room with water damage
     wet_rooms = sorted({d.room_id for d in regions if d.damage_class in ("water_stain", "mold")})
     for rid in wet_rooms:

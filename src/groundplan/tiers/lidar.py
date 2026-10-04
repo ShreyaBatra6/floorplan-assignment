@@ -91,3 +91,43 @@ def run_lidar(path: Path, opts: LidarOptions | None = None, core: CoreParams | N
 
     notes = list(cap.notes) + list(layout.notes)
     return LidarResult(cap, keyframes, poses, layout, scene, drift_report, timings, notes)
+
+
+def collect_views(cap: StrayCapture, keyframes: np.ndarray, poses: np.ndarray, max_views: int = 70,
+                  max_side: int = 960, depth_scale: float = 1.0, depth_offset: float = 0.0):
+    """RGB views for damage and room typing: evenly spread keyframes, sharpest kept, with depth for occlusion."""
+    import cv2
+
+    from groundplan.damage.ortho import View
+
+    if cap.video_path is None or len(keyframes) == 0:
+        return []
+    cand = np.linspace(0, len(keyframes) - 1, min(len(keyframes), int(max_views * 1.6))).round().astype(int)
+    cand = np.unique(cand)
+    frames = {int(keyframes[j]): j for j in cand}
+    imgs = dict(cap.rgb_frames(frames.keys(), max_side=max_side))
+    scored = []
+    for fidx, img in imgs.items():
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        scored.append((float(cv2.Laplacian(gray, cv2.CV_64F).var()), fidx))
+    if not scored:
+        return []
+    cut = np.percentile([s for s, _ in scored], 35)
+    views = []
+    for sharp, fidx in sorted(scored, key=lambda x: x[1]):
+        if sharp < cut and len(scored) > max_views:
+            continue
+        j = frames[fidx]
+        img = imgs[fidx]
+        s = img.shape[1] / cap.rgb_size[0]
+        K = cap.K_rgb[fidx].copy()
+        K[0, 0] *= s
+        K[1, 1] *= s
+        K[0, 2] = (K[0, 2] + 0.5) * s - 0.5
+        K[1, 2] = (K[1, 2] + 0.5) * s - 0.5
+        d = cap.depth(fidx) * depth_scale
+        d = np.where(d > 0, d + depth_offset, 0.0)
+        views.append(View(image=img, K=K, T_wc=poses[j], depth=d, K_depth=cap.K_depth(fidx), key=f"frame{fidx}"))
+        if len(views) >= max_views:
+            break
+    return views
