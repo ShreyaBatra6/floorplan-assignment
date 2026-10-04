@@ -157,17 +157,27 @@ def load_ground_truth(path: Path) -> GroundTruth:
         return parse_ground_truth(yaml.safe_load(fh), str(path))
 
 
-def from_sim(gt_json: dict) -> GroundTruth:
-    """The simulator's exact ground truth in the same structure (walls S, E, N, W = CCW)."""
-    doc = {"site": "sim", "rooms": [], "adjacency": gt_json.get("adjacency", [])}
+OPENING_PREFIX = {"door": "D", "window": "N", "open_passage": "P"}  # never W: that is a wall id
+
+
+def sim_truth_doc(gt_json: dict, site: str = "sim") -> dict:
+    """The simulator's exact ground truth as a ground-truth YAML document (walls S, E, N, W = CCW)."""
+    doc = {"site": site, "instrument": "simulator (exact)", "rooms": [],
+           "adjacency": [list(a) for a in gt_json.get("adjacency", [])]}
     for r in gt_json["rooms"]:
         doc["rooms"].append({
             "name": r["name"],
-            "walls": [{"id": w["id"], "length": w["length"]} for w in r["walls"]],
-            "ceiling": r["ceiling_height"],
-            "floor_area": r["floor_area"],
-            "openings": [{"id": f"{o['kind'][0].upper()}{k + 1}", "wall": o["wall"], "kind": o["kind"],
-                          "width": o["width"], "height": o["height"], "offset": o["offset"], "sill": o.get("sill")}
+            "walls": [{"id": w["id"], "length": float(w["length"])} for w in r["walls"]],
+            "ceiling": float(r["ceiling_height"]),
+            "floor_area": float(r["floor_area"]),
+            "openings": [{"id": f"{OPENING_PREFIX.get(o['kind'], 'X')}{k + 1}", "wall": o["wall"], "kind": o["kind"],
+                          "width": float(o["width"]), "height": float(o["height"]), "offset": float(o["offset"]),
+                          "sill": o.get("sill")}
                          for k, o in enumerate(r["openings"])],
         })
-    return parse_ground_truth(doc, "simulator")
+    return doc
+
+
+def from_sim(gt_json: dict) -> GroundTruth:
+    """The simulator's exact ground truth in the same structure as a measured site."""
+    return parse_ground_truth(sim_truth_doc(gt_json), "simulator")
