@@ -151,6 +151,24 @@ def build_boxes(spec: FlatSpec) -> tuple[np.ndarray, list[str]]:
     return np.stack(boxes), labels
 
 
+def _counterpart(spec: FlatSpec, op: OpeningSpec, other: RoomSpec) -> dict | None:
+    """The opening ``op`` expressed on the wall of ``other`` it passes through, if it does."""
+    a, b = side_segment(spec.room(op.room), op.side)
+    u = (b - a) / np.linalg.norm(b - a)
+    outn = {"S": (0, -1), "E": (1, 0), "N": (0, 1), "W": (-1, 0)}[op.side]
+    p0 = a + u * op.start + np.array(outn) * spec.wall_t
+    p1 = a + u * (op.start + op.width) + np.array(outn) * spec.wall_t
+    opposite = {"S": "N", "N": "S", "E": "W", "W": "E"}[op.side]
+    oa, ob = side_segment(other, opposite)
+    ou = (ob - oa) / np.linalg.norm(ob - oa)
+    on_line = abs(np.cross(ou, p0 - oa)) < 1e-6 and abs(np.cross(ou, p1 - oa)) < 1e-6
+    s0, s1 = sorted(((p0 - oa) @ ou, (p1 - oa) @ ou))
+    if not on_line or s0 < -1e-6 or s1 > np.linalg.norm(ob - oa) + 1e-6:
+        return None
+    return {"wall": opposite, "kind": op.kind, "width": op.width, "height": op.height, "sill": None,
+            "offset": float(s0)}
+
+
 def ground_truth(spec: FlatSpec) -> dict:
     """Exact measurements, in the benchmark ground-truth layout (see groundplan.bench.gt)."""
     rooms = []
@@ -165,6 +183,11 @@ def ground_truth(spec: FlatSpec) -> dict:
                 ops.append({"wall": op.side, "kind": op.kind, "width": op.width,
                             "height": op.height, "sill": op.sill if op.kind == "window" else None,
                             "offset": op.start})
+            elif op.kind != "window":
+                # the same door seen from the room behind it: it is an opening of both rooms
+                mirrored = _counterpart(spec, op, r)
+                if mirrored is not None:
+                    ops.append(mirrored)
         rooms.append({
             "name": r.name,
             "polygon": [[r.x0, r.y0], [r.x1, r.y0], [r.x1, r.y1], [r.x0, r.y1]],

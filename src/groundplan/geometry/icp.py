@@ -24,6 +24,7 @@ class ICPResult:
     rmse: float  # point-to-plane RMS of inliers (m)
     min_eig: float  # smallest eigenvalue of the normal matrix (per point): degeneracy measure
     n_inliers: int
+    H: np.ndarray | None = None  # (4, 4) normal matrix per inlier, parameters (yaw, tx, ty, tz)
 
     def apply(self, pts: np.ndarray) -> np.ndarray:
         return yaw_rotate(pts - self.center, self.yaw) + self.center + self.t
@@ -95,5 +96,5 @@ def icp_4dof(src: np.ndarray, dst: np.ndarray, dst_normals: np.ndarray, src_norm
         H = A.T @ A / ok.sum()
         min_eig = float(np.linalg.eigvalsh(H)[0])
     else:
-        rmse, min_eig = float("inf"), 0.0
-    return ICPResult(float(yaw), t, center, float(ok.mean()), rmse, min_eig, int(ok.sum()))
+        rmse, min_eig, H = float("inf"), 0.0, None
+    return ICPResult(float(yaw), t, center, float(ok.mean()), rmse, min_eig, int(ok.sum()), H)

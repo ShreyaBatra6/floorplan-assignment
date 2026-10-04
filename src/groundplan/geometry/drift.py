@@ -46,16 +46,22 @@ class DriftParams:
     odo_trans_floor: float = 0.002
     odo_yaw_deg_per_m: float = 0.25
     loop_min_gap: int = 3
+    loop_min_time_gap: float = 8.0
+    loop_per_submap: int = 3
     loop_max_center_dist: float = 2.5
-    loop_max_trans: float = 0.25
-    loop_max_yaw_deg: float = 4.0
+    loop_max_trans: float = 0.35
+    loop_max_yaw_deg: float = 6.0
     loop_min_fitness: float = 0.35
     loop_max_rmse: float = 0.02
-    loop_min_eig: float = 2e-3
-    loop_sigma_trans: float = 0.01
+    loop_min_eig: float = 8e-3
+    loop_cauchy_c: float = 4.0  # whitened residual scale of the per-closure robust weight
+    loop_sigma_point: float = 0.005  # per-point plane distance noise for the closure information
+    loop_max_eff_points: int = 150  # cap: neighbouring points share pose/depth errors
+    loop_expected_drift_per_sqrt_m: float = 0.012  # plausibility gate on a closure's size
+    loop_gate_sigmas: float = 3.0
     manhattan_sigma_deg: float = 0.5
     manhattan_min_strength: float = 0.6
-    max_loops: int = 400
+    max_loops: int = 160
 
 
 @dataclass
@@ -123,23 +129,39 @@ def correct_drift(cap, keyframes: np.ndarray, poses: np.ndarray, depth_scale: fl
                       notes="walk too short for a pose graph; poses unchanged")
         return poses, report
 
-    # --- loop closures
+    # --- loop closures: revisits (long time gap) first, a few nearest partners per submap
     loops = []
     centers = np.array([s.center for s in subs])
+    times = np.array([s.t_mid for s in subs])
     cand = []
-    for i in range(n):
-        for j in range(i + p.loop_min_gap, n):
-            if np.linalg.norm(centers[i] - centers[j]) <= p.loop_max_center_dist:
-                cand.append((i, j))
+    for j in range(n):
+        partners = []
+        for i in range(0, j - p.loop_min_gap + 1):
+            if times[j] - times[i] < p.loop_min_time_gap:
+                continue
+            dist = np.linalg.norm(centers[i] - centers[j])
+            if dist <= p.loop_max_center_dist:
+                partners.append((dist, i))
+        for _, i in sorted(partners)[: p.loop_per_submap]:
+            cand.append((times[j] - times[i], i, j))
+    cand.sort(reverse=True)
+    if len(cand) > p.max_loops:  # keep an even spread along the walk
+        pick = np.linspace(0, len(cand) - 1, p.max_loops).round().astype(int)
+        cand = [cand[k] for k in pick]
     tried = 0
-    for i, j in cand[: p.max_loops]:
+    for _, i, j in cand:
         a, b = subs[i], subs[j]
         if len(a.xyz) < 200 or len(b.xyz) < 200:
             continue
         tried += 1
-        res = icp_4dof(b.xyz, a.xyz, a.normal, b.normal, seed=i * 1000 + j)
+        res = icp_4dof(b.xyz, a.xyz, a.normal, b.normal, max_dist=(0.30, 0.15, 0.08, 0.04, 0.03),
+                       max_points=2500, seed=i * 1000 + j)
+        walked = abs(subs[j].path_pos - subs[i].path_pos)
+        expected = p.loop_expected_drift_per_sqrt_m * np.sqrt(max(walked, 1.0)) + 0.01
+        shift = np.linalg.norm(res.apply(subs[j].center[None])[0] - subs[j].center)
         if (res.fitness >= p.loop_min_fitness and res.rmse <= p.loop_max_rmse and res.min_eig >= p.loop_min_eig
-                and np.linalg.norm(res.t) <= p.loop_max_trans and abs(np.degrees(res.yaw)) <= p.loop_max_yaw_deg):
+                and res.H is not None and shift <= min(p.loop_gate_sigmas * expected, p.loop_max_trans)
+                and abs(np.degrees(res.yaw)) <= p.loop_max_yaw_deg):
             loops.append((i, j, res))
 
     # --- Manhattan heading per submap
@@ -152,10 +174,12 @@ def correct_drift(cap, keyframes: np.ndarray, poses: np.ndarray, depth_scale: fl
         else:
             yaw_obs.append(None)
 
-    # --- solve: x = [yaw_i, tx_i, ty_i, tz_i] for i in 1..n-1 (submap 0 fixed: gauge)
+    # --- solve: x = [yaw_i, tx_i, ty_i, tz_i] for i in 1..n-1, then the walk's Manhattan heading.
+    # Submap 0 is fixed (gauge); the Manhattan heading is a free unknown, so the plane-anchoring
+    # prior pulls submaps towards *each other's* wall direction instead of fighting the gauge.
     def unpack(x):
         X = np.zeros((n, 4))
-        X[1:] = x.reshape(n - 1, 4)
+        X[1:] = x[: (n - 1) * 4].reshape(n - 1, 4)
         return X
 
     def apply(X, i, pts):
@@ -175,22 +199,52 @@ def correct_drift(cap, keyframes: np.ndarray, poses: np.ndarray, depth_scale: fl
             q = _anchors(subs[i + 1].center)
             r.append(((apply(X, i + 1, q) - apply(X, i, q)) / st).ravel())
             r.append(np.array([(X[i + 1, 0] - X[i, 0]) / sy]))
-        for i, j, res in loops:
-            q = _anchors(subs[j].center)
-            target = apply(X, i, res.apply(q))  # where j's anchors land, expressed through i
-            r.append(((apply(X, j, q) - target) / p.loop_sigma_trans).ravel())
+        for (i, j, res), W, wr in zip(loops, loop_w, robust_w):
+            r.append(np.sqrt(wr) * (W @ loop_error(X, i, j, res)))
         sm = np.radians(p.manhattan_sigma_deg)
         for i, yo in enumerate(yaw_obs):
             if yo is not None:
-                r.append(np.array([(X[i, 0] + yo) / sm]))
+                r.append(np.array([(X[i, 0] + yo - x[-1]) / sm]))
         return np.concatenate(r)
 
-    x0 = np.zeros((n - 1) * 4)
-    r0 = residuals(x0)
-    sparsity = _sparsity(n, odo_edges, loops, yaw_obs, len(r0))
-    sol = least_squares(residuals, x0, jac_sparsity=sparsity, loss="cauchy", f_scale=3.0, max_nfev=60,
-                        x_scale=np.tile([0.01, 0.01, 0.01, 0.01], n - 1))
+    def loop_weights(lps):
+        out = []
+        for _, _, res in lps:
+            n_eff = min(res.n_inliers, p.loop_max_eff_points)
+            sp = max(res.rmse, p.loop_sigma_point)
+            info = res.H * n_eff / sp**2
+            w, V = np.linalg.eigh(info)
+            out.append((V * np.sqrt(np.maximum(w, 0.0))).T)  # W^T W = info
+        return out
+
+    def loop_error(X, i, j, res):
+        c = res.center[None]
+        e_t = (apply(X, j, c) - apply(X, i, res.apply(c)))[0]
+        return np.concatenate([[X[j, 0] - X[i, 0] - res.yaw], e_t])
+
+    x0 = np.zeros((n - 1) * 4 + 1)
+    all_loops = list(loops)
+    loop_w = loop_weights(loops)
+    # odometry + plane anchoring only, then iteratively reweighted closures (Cauchy weight per
+    # closure): closures consistent with the rest of the graph converge to weight 1, false ones
+    # (an ICP that slid along a corridor) decay towards 0 instead of bending the walk.
+    robust_w = [0.0] * len(loops)
+    sparsity = _sparsity(n, odo_edges, loops, yaw_obs, len(residuals(x0)))
+    sol = least_squares(residuals, x0, jac_sparsity=sparsity, loss="linear", max_nfev=50,
+                        x_scale=np.full(len(x0), 0.01))
+    for _round in range(6 if loops else 0):
+        X = unpack(sol.x)
+        z = np.array([np.linalg.norm(W @ loop_error(X, i, j, res)) for (i, j, res), W in zip(loops, loop_w)])
+        robust_w = list(1.0 / (1.0 + (z / p.loop_cauchy_c) ** 2))
+        sol = least_squares(residuals, sol.x, jac_sparsity=sparsity, loss="linear", max_nfev=50,
+                            x_scale=np.full(len(x0), 0.01))
     X = unpack(sol.x)
+    keep = [k for k, w in enumerate(robust_w) if w >= 0.3]
+    rejected = len(loops) - len(keep)
+    loops = [loops[k] for k in keep]
+    _ = all_loops
+    report["loop_closures_rejected"] = rejected
+    _ = all_loops
 
     # --- interpolate corrections onto keyframes (by walked distance) and apply
     path = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(poses[:, :3, 3], axis=0), axis=1))])
@@ -208,12 +262,13 @@ def correct_drift(cap, keyframes: np.ndarray, poses: np.ndarray, depth_scale: fl
         moved.append(np.linalg.norm(new[k, :3, 3] - C))
     moved = np.array(moved)
     loop_before = _loop_residual(subs, loops, np.zeros((n, 4)), apply)
+    report["notes_rejected"] = rejected
     loop_after = _loop_residual(subs, loops, X, apply)
     report.update(
         loop_closures=len(loops),
         max_correction_m=round(float(moved.max()), 4),
         mean_correction_m=round(float(moved.mean()), 4),
-        notes=(f"{tried} closure candidates tested, {len(loops)} accepted; loop residual "
+        notes=(f"{tried} closure candidates tested, {len(loops)} accepted ({rejected} rejected as inconsistent); loop residual "
                f"{loop_before * 1000:.1f} mm -> {loop_after * 1000:.1f} mm; max heading correction "
                f"{np.degrees(np.abs(X[:, 0]).max()):.2f} deg; Manhattan anchors on "
                f"{sum(y is not None for y in yaw_obs)}/{n} submaps"),
@@ -241,7 +296,7 @@ def _manhattan_yaw(normals: np.ndarray) -> tuple[float, float]:
 
 
 def _sparsity(n, odo_edges, loops, yaw_obs, m):
-    S = lil_matrix((m, (n - 1) * 4), dtype=int)
+    S = lil_matrix((m, (n - 1) * 4 + 1), dtype=int)
     row = 0
 
     def mark(r0, nrows, subs_idx):
@@ -256,10 +311,11 @@ def _sparsity(n, odo_edges, loops, yaw_obs, m):
         mark(row, 1, (i, i + 1))
         row += 1
     for i, j, _ in loops:
-        mark(row, 12, (i, j))
-        row += 12
+        mark(row, 4, (i, j))
+        row += 4
     for i, yo in enumerate(yaw_obs):
         if yo is not None:
             mark(row, 1, (i,))
+            S[row, (n - 1) * 4] = 1
             row += 1
     return S

@@ -168,7 +168,8 @@ def simulate_capture(spec: FlatSpec, out_dir: Path, opts: SimOptions | None = No
 
     np.savetxt(out_dir / "camera_matrix.csv", K_rgb, delimiter=",", fmt="%.4f")
     rows = ["timestamp, frame, x, y, z, qx, qy, qz, qw, fx, fy, cx, cy, distortion_center_x, distortion_center_y"]
-    drift_p = np.zeros(3)
+    true_rows = ["timestamp, frame, x, y, z, qx, qy, qz, qw"]
+    C_rec = np.zeros(3)
     drift_yaw = 0.0
     prev = None
     cam_h = 1.40
@@ -184,18 +185,27 @@ def simulate_capture(spec: FlatSpec, out_dir: Path, opts: SimOptions | None = No
         cv2.imwrite(str(out_dir / "depth" / f"{i:06d}.png"), d_mm)
         cv2.imwrite(str(out_dir / "confidence" / f"{i:06d}.png"), conf)
 
-        if prev is not None:
+        # visual-inertial drift is incremental: each true step is integrated under a slowly
+        # wandering heading, plus a small translation random walk
+        if prev is None:
+            C_rec = C.copy()
+        else:
             step = np.linalg.norm(C - prev)
-            drift_p += rng.normal(0, 1, 3) * opts.drift_pos_per_m * np.sqrt(step) * np.array([1, 0.3, 1])
             drift_yaw += rng.normal() * np.radians(opts.drift_yaw_deg_per_m) * np.sqrt(step)
+            Dy_step = Rotation.from_euler("y", drift_yaw).as_matrix()
+            C_rec = C_rec + Dy_step @ (C - prev)
+            C_rec = C_rec + rng.normal(0, 1, 3) * opts.drift_pos_per_m * np.sqrt(step) * np.array([1, 0.3, 1])
         prev = C
         Dy = Rotation.from_euler("y", drift_yaw).as_matrix()
         R_rec = Dy @ R
-        C_rec = Dy @ C + drift_p
+        qt = Rotation.from_matrix(R).as_quat()
+        true_rows.append(f"{i / opts.fps:.6f}, {i:06d}, {C[0]:.6f}, {C[1]:.6f}, {C[2]:.6f}, "
+                         f"{qt[0]:.7f}, {qt[1]:.7f}, {qt[2]:.7f}, {qt[3]:.7f}")
         q = Rotation.from_matrix(R_rec).as_quat()
         rows.append(f"{i / opts.fps:.6f}, {i:06d}, {C_rec[0]:.6f}, {C_rec[1]:.6f}, {C_rec[2]:.6f}, "
                     f"{q[0]:.7f}, {q[1]:.7f}, {q[2]:.7f}, {q[3]:.7f}, {FX_RGB:.4f}, {FX_RGB:.4f}, 959.5, 719.5, , ")
     (out_dir / "odometry.csv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    (out_dir / "odometry_true.csv").write_text("\n".join(true_rows) + "\n", encoding="utf-8")
     gt = ground_truth(spec)
     gt["sim"] = {k: getattr(opts, k) for k in opts.__dataclass_fields__}
     gt["frames"] = len(traj)
