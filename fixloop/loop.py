@@ -13,8 +13,9 @@ declare  Refuses while sections 1-3 still hold blanks, or if src/ or tests/ chan
          ``fixloop-before``. Commits the declaration and tags it ``fixloop-declared``: the root
          cause and the predicted number are on record before any fix exists.
 after    Refuses unless src/ changed after ``fixloop-declared``. Tags HEAD ``fixloop-after``,
-         regenerates both runs from their own worktrees (run_fixloop.py) and writes the declared
-         gate's after-run value into section 4. Prediction vs outcome is then written by hand.
+         regenerates the after run from its own worktree (run_fixloop.py; the before run made by
+         ``before`` at the tagged commit is reused unless --fresh) and writes the declared gate's
+         after-run value into section 4. Prediction vs outcome is then written by hand.
 """
 
 from __future__ import annotations
@@ -197,8 +198,12 @@ def cmd_after(a) -> int:
     if git("diff", "--quiet", DECLARED, "HEAD", "--", "src", check=False).returncode == 0:
         raise SystemExit(f"no change under src/ since {DECLARED}: there is no fix to measure")
     git("tag", "-a", AFTER, "-m", "Fix loop: code state of the after benchmark run")
-    r = subprocess.run([sys.executable, str(ROOT / "fixloop" / "run_fixloop.py"), "--before", BEFORE,
-                        "--after", AFTER, "--manifest", str(Path(a.manifest).resolve())], cwd=ROOT)
+    cmd = [sys.executable, str(ROOT / "fixloop" / "run_fixloop.py"), "--before", BEFORE, "--after", AFTER,
+           "--manifest", str(Path(a.manifest).resolve())]
+    before_run = ROOT / "benchmark" / "results" / git("rev-parse", "--short", BEFORE).stdout.strip()
+    if not a.fresh and (before_run / "metrics.json").exists():
+        cmd += ["--reuse-before", str(before_run)]  # made by `before` at the tagged commit; --fresh redoes it
+    r = subprocess.run(cmd, cwd=ROOT)
     if r.returncode != 0:
         raise SystemExit("regeneration failed (tag kept); fix the problem and re-run run_fixloop.py")
     text = DECL.read_text(encoding="utf-8")
@@ -222,6 +227,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("step", choices=["status", "before", "declare", "after"])
     ap.add_argument("--manifest", default=str(ROOT / "benchmark" / "manifest.yaml"))
+    ap.add_argument("--fresh", action="store_true", help="after: regenerate the before run too")
     a = ap.parse_args()
     return {"status": cmd_status, "before": cmd_before, "declare": cmd_declare, "after": cmd_after}[a.step](a)
 

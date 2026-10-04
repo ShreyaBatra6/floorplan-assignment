@@ -76,16 +76,25 @@ def main() -> int:
     ap.add_argument("--after", default="fixloop-after")
     ap.add_argument("--manifest", default=str(ROOT / "benchmark" / "manifest.yaml"))
     ap.add_argument("--out", default=str(ROOT / "fixloop"))
+    ap.add_argument("--reuse-before", default=None,
+                    help="results folder of a benchmark run made at the --before commit (e.g. by `loop.py before`); "
+                         "used instead of running the before benchmark again")
     a = ap.parse_args()
     manifest = Path(a.manifest).resolve()
     out_dir = Path(a.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
-    before = run_ref(a.before, manifest, out_dir)
+    if a.reuse_before:
+        before = json.loads((Path(a.reuse_before) / "metrics.json").read_text(encoding="utf-8"))
+        how = (f"the before run is `{Path(a.reuse_before).as_posix()}`, made at the `{a.before}` commit; the after run "
+               "is regenerated from its own worktree")
+    else:
+        before = run_ref(a.before, manifest, out_dir)
+        how = "each run regenerated from its own worktree"
     after = run_ref(a.after, manifest, out_dir)
     (out_dir / "fix.diff").write_text(sh(["git", "diff", f"{a.before}..{a.after}", "--", "src", "tests"]),
                                       encoding="utf-8", newline="\n")
     rows = ["# Fix loop: before vs after", "",
-            f"`{a.before}` vs `{a.after}`, same raw data (`{manifest}`), each run from its own code.", "",
+            f"`{a.before}` vs `{a.after}`, same raw data (`{manifest.name}`); {how}.", "",
             "| gate | tier | before | after | before status | after status |", "|---|---|---|---|---|---|"]
     gb = {(g["name"], g["tier"]): g for g in before["gates"]}
     for g in after["gates"]:

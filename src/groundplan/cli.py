@@ -136,7 +136,9 @@ def bench_score(results: Path = typer.Argument(..., help="results folder with <c
 
 @bench_app.command("calibrate")
 def bench_calibrate(results: Path = typer.Argument(..., help="results folder containing metrics.json"),
-                    write: bool = typer.Option(False, help="write the fitted multipliers to calibration.json")) -> None:
+                    write: bool = typer.Option(False, help="write the fitted multipliers to calibration.json"),
+                    to: Path = typer.Option(None, help="write to this file instead (a calibration for one device "
+                                                       "or dataset), starting from the current one")) -> None:
     """Fit split-conformal interval multipliers per tier and quantity (leave-one-capture-out coverage)."""
     from groundplan.bench.calibrate import apply, fit
 
@@ -151,8 +153,13 @@ def bench_calibrate(results: Path = typer.Argument(..., help="results folder con
     for key, row in rep["loo"].items():
         console.print(f"{key:28} n={row['n']:3d} factor={row['factor'] if row['factor'] is None else round(row['factor'], 3)} "
                       f"LOO coverage={row['loo_coverage']}")
-    if write:
-        console.print(f"wrote {apply(rep, str(results))}")
+    if write or to:
+        import os
+
+        from groundplan.calib.intervals import DEFAULT_PATH
+
+        base = Path(os.environ.get("GROUNDPLAN_CALIBRATION") or DEFAULT_PATH)
+        console.print(f"wrote {apply(rep, str(results), base, to)}")
 
 
 @app.command("eval")

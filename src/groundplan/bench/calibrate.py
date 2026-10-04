@@ -119,7 +119,8 @@ def fit(metrics: dict, min_n: int = 8) -> dict:
     return report
 
 
-def apply(report: dict, source: str, path: Path = DEFAULT_PATH) -> Path:
+def apply(report: dict, source: str, path: Path = DEFAULT_PATH, out: Path | None = None) -> Path:
+    """Fold the fit into the calibration at ``path`` and write the result to ``out`` (default ``path``)."""
     cal = json.loads(Path(path).read_text(encoding="utf-8"))
     history = cal.pop("history", [])
     history.append({k: cal[k] for k in ("version", "fitted", "source", "tiers") if k in cal})
@@ -142,5 +143,6 @@ def apply(report: dict, source: str, path: Path = DEFAULT_PATH) -> Path:
     cal["source"] = source
     cal["fit_report"] = report
     cal["history"] = history
-    Path(path).write_text(json.dumps(cal, indent=2) + "\n", encoding="utf-8", newline="\n")
-    return Path(path)
+    out = Path(out or path)
+    out.write_text(json.dumps(cal, indent=2) + "\n", encoding="utf-8", newline="\n")
+    return out
