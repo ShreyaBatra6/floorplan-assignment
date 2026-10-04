@@ -100,6 +100,73 @@ def validate(plans: list[Path] = typer.Argument(..., help="plan.json files to ch
     raise typer.Exit(code=1 if failed else 0)
 
 
+bench_app = typer.Typer(help="Benchmark: run every capture in the manifest and score it against laser/tape truth.")
+app.add_typer(bench_app, name="bench")
+
+
+@bench_app.command("run")
+def bench_run(
+    manifest: Path = typer.Option(REPO_ROOT / "benchmark" / "manifest.yaml", help="benchmark manifest"),
+    out: Path = typer.Option(None, help="results folder (default benchmark/results/<git sha>)"),
+    only: list[str] = typer.Option(None, help="restrict to these capture ids"),
+) -> None:
+    """Run all captures live, then score them (gates, repeatability, drift ablation, calibration, head-to-head)."""
+    from groundplan.bench.runner import run_benchmark
+    from groundplan.pipeline import _git_commit
+
+    out = out or REPO_ROOT / "benchmark" / "results" / (_git_commit() or "local")
+    res = run_benchmark(manifest, out, only)
+    for g in res["gates"]:
+        status = "n/a" if g["passed"] is None else ("PASS" if g["passed"] else "FAIL")
+        console.print(f"{status:5} {g['tier']:6} {g['name']}: {g['value']}")
+    console.print(f"report: {out / 'benchmark_report.md'}")
+
+
+@bench_app.command("score")
+def bench_score(results: Path = typer.Argument(..., help="results folder with <capture>/plan.json"),
+                manifest: Path = typer.Option(REPO_ROOT / "benchmark" / "manifest.yaml")) -> None:
+    """Rescore saved plans without re-running the pipeline."""
+    from groundplan.bench.runner import load_manifest, score_benchmark
+
+    res = score_benchmark(load_manifest(manifest), results)
+    for g in res["gates"]:
+        status = "n/a" if g["passed"] is None else ("PASS" if g["passed"] else "FAIL")
+        console.print(f"{status:5} {g['tier']:6} {g['name']}: {g['value']}")
+
+
+@bench_app.command("calibrate")
+def bench_calibrate(results: Path = typer.Argument(..., help="results folder containing metrics.json"),
+                    write: bool = typer.Option(False, help="write the fitted multipliers to calibration.json")) -> None:
+    """Fit split-conformal interval multipliers per tier and quantity (leave-one-capture-out coverage)."""
+    from groundplan.bench.calibrate import apply, fit
+
+    metrics = json.loads((results / "metrics.json").read_text(encoding="utf-8"))
+    rep = fit(metrics)
+    for key, row in rep["loo"].items():
+        console.print(f"{key:28} n={row['n']:3d} factor={row['factor'] if row['factor'] is None else round(row['factor'], 3)} "
+                      f"LOO coverage={row['loo_coverage']}")
+    if write:
+        console.print(f"wrote {apply(rep, str(results))}")
+
+
+@app.command("eval")
+def eval_plan(plan: Path = typer.Argument(..., help="plan.json"),
+              truth: Path = typer.Argument(..., help="ground-truth YAML of the site")) -> None:
+    """Score one plan against its ground truth (walls, ceiling, openings, area, adjacency)."""
+    from groundplan.bench.gates import ceiling_gate, opening_gate, score_capture, wall_gate
+    from groundplan.bench.gt import load_ground_truth
+    from groundplan.contract import Plan
+
+    p = Plan.model_validate_json(plan.read_text(encoding="utf-8"))
+    sc = score_capture(p, load_ground_truth(truth), plan.parent.name)
+    for g in (wall_gate([sc], p.capture.tier), ceiling_gate([sc], p.capture.tier), opening_gate([sc], p.capture.tier)):
+        status = "n/a" if g.passed is None else ("PASS" if g.passed else "FAIL")
+        console.print(f"{status:5} {g.name}: {g.value} {g.detail}")
+    for it in sc.items:
+        console.print(f"  {it.kind:15} {it.room:12} {it.ref:8} truth {it.truth:.3f}  ours {it.value:.3f} "
+                      f"[{it.lo:.3f},{it.hi:.3f}]  err {it.err * 100:+.1f} cm  {'in' if it.covered else 'OUT'}")
+
+
 def main() -> None:
     try:
         app()

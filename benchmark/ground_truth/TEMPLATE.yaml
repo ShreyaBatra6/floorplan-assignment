@@ -1,0 +1,36 @@
+# Ground truth for one site. Copy to <site>.yaml and fill in on site (see docs/BENCHMARK_PROTOCOL.md).
+# All lengths in metres. Two readings per quantity; the benchmark uses their mean.
+site: flat_a
+instrument: "e.g. Bosch GLM 50-27, +-1.5 mm"
+measured_by: ""
+date: "2026-10-__"
+
+rooms:
+  - name: living              # short id used everywhere else (manifest, app CSV)
+    walls:                    # W1 = wall with the entrance door, then right shoulder to the wall
+      - {id: W1, readings: [0.000, 0.000]}
+      - {id: W2, readings: [0.000, 0.000]}
+      - {id: W3, readings: [0.000, 0.000]}
+      - {id: W4, readings: [0.000, 0.000]}
+    ceiling: {readings: [0.000, 0.000, 0.000]}
+    diagonals: [0.000, 0.000]
+    openings:
+      - {id: D1, wall: W1, kind: door, width: [0.000, 0.000], height: [0.000], offset: 0.00, connects_to: hall}
+      - {id: N1, wall: W3, kind: window, width: [0.000, 0.000], height: [0.000], sill: [0.000], offset: 0.00}
+    damage:                   # staged damage in this room (omit if none)
+      - {id: X1, class: water_stain, surface: W2, width: 0.00, height: 0.00, bottom: 0.00, offset: 0.00}
+      - {id: X2, class: crack, surface: W2, width: 0.00, height: 0.00, bottom: 0.00, offset: 0.00}
+
+  - name: hall
+    connector: true
+    walls:
+      - {id: W1, readings: [0.000, 0.000]}
+      - {id: W2, readings: [0.000, 0.000]}
+      - {id: W3, readings: [0.000, 0.000]}
+      - {id: W4, readings: [0.000, 0.000]}
+    ceiling: {readings: [0.000, 0.000, 0.000]}
+    openings:
+      - {id: D1, wall: W2, kind: door, width: [0.000, 0.000], height: [0.000], offset: 0.00, connects_to: living}
+
+adjacency:
+  - [living, hall]

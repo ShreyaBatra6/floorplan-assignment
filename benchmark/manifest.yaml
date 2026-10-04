@@ -1,0 +1,20 @@
+# Benchmark manifest: one entry per capture. Raw data paths are relative to $GROUNDPLAN_DATA (default ./data).
+# Fill in after capturing (see docs/BENCHMARK_PROTOCOL.md). Example entries are commented out.
+sites: {}
+#  flat_a: benchmark/ground_truth/flat_a.yaml
+
+captures: []
+#  - {id: flat_a_lidar_1, site: flat_a, tier: lidar, path: flat_a/lidar_1}
+#  - {id: flat_a_lidar_2, site: flat_a, tier: lidar, path: flat_a/lidar_2, repeat_of: flat_a_lidar_1}
+#  - {id: flat_a_video_1, site: flat_a, tier: video, path: flat_a/video_1/IMG_0001.MOV}
+#  - {id: flat_a_photo_1, site: flat_a, tier: photo, path: flat_a/photos_1}
+#  - {id: flat_a_photo_2, site: flat_a, tier: photo, path: flat_a/photos_2, repeat_of: flat_a_photo_1}
+
+drift_ablation: []
+#  - flat_a_lidar_1
+
+# head_to_head:
+#   app: "Polycam (free tier), Room mode"
+#   app_version: ""
+#   dimensions: benchmark/app_exports/polycam_dimensions.csv
+#   ours: flat_a_lidar_1
