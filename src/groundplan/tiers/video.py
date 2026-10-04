@@ -9,7 +9,8 @@
 4. Scale: for every registered frame the depth model is compared with the SfM depths of the points
    that frame sees; each frame's depth map is aligned to the reconstruction (removing the model's
    per-frame scale noise) and the reconstruction itself gets a metric scale from the fused cues
-   (``tiers/scale.py``: model factor, ceiling, door heads, camera height).
+   (``tiers/scale.py``: model factor, ceiling, door heads, camera height, a sheet of paper on
+   the floor when one is visible, ``tiers/paper.py``).
 5. The aligned depth maps are fused and go through the same geometric core as the LiDAR tier.
 If structure from motion fails, the frames are processed like photos of one space, with intervals
 that say so.
@@ -34,6 +35,7 @@ from groundplan.geometry.scene import CoreParams, SceneInput, SceneLayout, build
 from groundplan.io.video import VideoClip, read_video
 from groundplan.models.depth import predict_depth
 from groundplan.tiers import scale as S
+from groundplan.tiers.paper import find_sheet
 
 SFM_THREADS = 2
 
@@ -82,6 +84,17 @@ def run_sfm(clip: VideoClip, workdir: Path) -> SfMResult | None:
     match.num_threads = SFM_THREADS
     match.use_gpu = False
     pycolmap.match_sequential(db, matching_options=match, pairing_options=pair)
+    # revisit pairs: frames that look alike but are far apart in time (coming back into a room,
+    # looking at the same doorway twice). Sequential matching alone cannot connect them, and a walk
+    # whose pieces never meet again ends up as several separate models.
+    D = frame_descriptors(clip)
+    revisit = revisit_pairs(D, min_gap=pair.overlap + 1)
+    if revisit:
+        pairs_file = workdir / "revisit_pairs.txt"
+        pairs_file.write_text("\n".join(f"{i:05d}.jpg {j:05d}.jpg" for i, j in revisit) + "\n", encoding="utf-8")
+        imported = pycolmap.ImportedPairingOptions()
+        imported.match_list_path = str(pairs_file)
+        pycolmap.match_image_pairs(db, matching_options=match, pairing_options=imported)
     opts = pycolmap.IncrementalPipelineOptions()
     opts.min_model_size = 8
     opts.multiple_models = True
@@ -104,9 +117,50 @@ def run_sfm(clip: VideoClip, workdir: Path) -> SfMResult | None:
     if not models:
         return None
     if len(models) == 1:
-        models[0].notes = f"structure from motion: {models[0].registered}/{len(clip.frames)} frames in one model"
+        models[0].notes = (f"structure from motion: {models[0].registered}/{len(clip.frames)} frames in one model"
+                           + _coverage_note(models[0].registered, len(clip.frames)))
         return models[0]
-    return bridge_models(clip, models)
+    return bridge_models(clip, models, D)
+
+
+def frame_descriptors(clip: VideoClip) -> np.ndarray:
+    """One global appearance vector per frame (CLIP image embedding; tiny-thumbnail fallback)."""
+    from groundplan.models import clip as clip_model
+
+    if clip_model.available():
+        return clip_model.image_features([f.image for f in clip.frames])
+    thumbs = []
+    for f in clip.frames:
+        g = cv2.cvtColor(cv2.resize(f.image, (32, 24), interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2GRAY)
+        v = g.astype(np.float32).ravel()
+        v -= v.mean()
+        thumbs.append(v / (np.linalg.norm(v) + 1e-6))
+    return np.array(thumbs)
+
+
+def revisit_pairs(D: np.ndarray, min_gap: int, per_frame: int = 3, max_pairs: int = 600) -> list[tuple[int, int]]:
+    """Non-sequential frame pairs worth matching: each frame's most similar frames outside its time window.
+
+    ``D`` holds one unit descriptor per frame. Similarity must also stand out from the clip's typical
+    similarity (above the 97th percentile of all non-adjacent pairs), so plain walls that all look
+    alike do not flood the matcher.
+    """
+    n = len(D)
+    if n <= min_gap + 2:
+        return []
+    S = D @ D.T
+    idx = np.arange(n)
+    far = np.abs(idx[:, None] - idx[None, :]) >= min_gap
+    if not far.any():
+        return []
+    thr = float(np.percentile(S[far], 97))
+    pairs = set()
+    for i in range(n):
+        cand = np.flatnonzero(far[i] & (S[i] >= thr))
+        for j in cand[np.argsort(-S[i, cand])][:per_frame]:
+            pairs.add((min(i, int(j)), max(i, int(j))))
+    ranked = sorted(pairs, key=lambda p: -S[p[0], p[1]])
+    return ranked[:max_pairs]
 
 
 def _model(rec, n_frames: int) -> SfMResult:
@@ -150,81 +204,156 @@ def _metric_normalise(clip: VideoClip, m: SfMResult, samples: int = 6) -> float:
     return r
 
 
-def _pnp_step(clip: VideoClip, K: np.ndarray, T_a: np.ndarray, a: int, b: int, depth_a: np.ndarray):
-    """Pose of frame b from frame a (known pose, model-unit depth) by SIFT matches + PnP RANSAC."""
-    sift = cv2.SIFT_create(nfeatures=3000)
-    ga = cv2.cvtColor(clip.frames[a].image, cv2.COLOR_BGR2GRAY)
-    gb = cv2.cvtColor(clip.frames[b].image, cv2.COLOR_BGR2GRAY)
+_CLAHE = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+
+
+def _pnp_step(clip: VideoClip, K: np.ndarray, T_a: np.ndarray, a: int, b: int, depth_a: np.ndarray,
+              min_inliers: int = 10):
+    """Pose of frame b from frame a (known pose, model-unit depth) by SIFT matches + PnP RANSAC.
+
+    Tuned for the frames where reconstruction broke, which are mostly plain walls: contrast is
+    equalised and the SIFT threshold halved. A low inlier count is acceptable because the caller
+    accepts a transform only when a second frame pair agrees with it.
+    Returns (T_wc of b, inlier count) or None."""
+    sift = cv2.SIFT_create(nfeatures=4000, contrastThreshold=0.02)
+    ga = _CLAHE.apply(cv2.cvtColor(clip.frames[a].image, cv2.COLOR_BGR2GRAY))
+    gb = _CLAHE.apply(cv2.cvtColor(clip.frames[b].image, cv2.COLOR_BGR2GRAY))
     ka, da = sift.detectAndCompute(ga, None)
     kb, db = sift.detectAndCompute(gb, None)
     if da is None or db is None or len(ka) < 20 or len(kb) < 20:
         return None
     m = cv2.BFMatcher(cv2.NORM_L2).knnMatch(da, db, k=2)
-    good = [x[0] for x in m if len(x) == 2 and x[0].distance < 0.75 * x[1].distance]
-    if len(good) < 20:
+    good = [x[0] for x in m if len(x) == 2 and x[0].distance < 0.8 * x[1].distance]
+    if len(good) < 12:
         return None
     ua = np.array([ka[g.queryIdx].pt for g in good])
     ub = np.array([kb[g.trainIdx].pt for g in good], np.float32)
     h, w = depth_a.shape
     d = depth_a[np.clip(ua[:, 1].astype(int), 0, h - 1), np.clip(ua[:, 0].astype(int), 0, w - 1)]
     ok = (d > 0.2) & (d < 8)
-    if ok.sum() < 15:
+    if ok.sum() < min_inliers:
         return None
     Pc = np.stack([(ua[ok, 0] - K[0, 2]) / K[0, 0] * d[ok], (ua[ok, 1] - K[1, 2]) / K[1, 1] * d[ok], d[ok]], 1)
     Pw = Pc @ T_a[:3, :3].T + T_a[:3, 3]
-    found, rvec, tvec, inl = cv2.solvePnPRansac(Pw.astype(np.float32), ub[ok], K, None, reprojectionError=4.0,
-                                                iterationsCount=300, confidence=0.999)
-    if not found or inl is None or len(inl) < 15:
+    found, rvec, tvec, inl = cv2.solvePnPRansac(Pw.astype(np.float32), ub[ok], K, None, reprojectionError=3.0,
+                                                iterationsCount=500, confidence=0.999)
+    if not found or inl is None or len(inl) < min_inliers:
         return None
+    inl = inl.ravel()
+    rvec, tvec = cv2.solvePnPRefineLM(Pw[inl].astype(np.float32), ub[ok][inl], K, None, rvec, tvec)
     R, _ = cv2.Rodrigues(rvec)
+    # RANSAC can return a degenerate pose (camera "at infinity") that still counts inliers: the
+    # matched points must lie in front of b at depths like those seen from a, and b must be near a
+    zb = (Pw[inl] @ R.T + tvec.ravel())[:, 2]
+    za = d[ok][inl]
+    if (zb <= 0.1).any() or not (0.33 < np.median(zb) / np.median(za) < 3.0):
+        return None
     T = np.eye(4)
     T[:3, :3] = R.T
     T[:3, 3] = (-R.T @ tvec).ravel()
-    return T
+    if np.linalg.norm(T[:3, 3] - T_a[:3, 3]) > 2.0 * float(np.median(za)) + 0.5:
+        return None
+    return T, len(inl)
 
 
-def bridge_models(clip: VideoClip, models: list[SfMResult]) -> SfMResult:
-    """Join SfM models that a fast turn split apart, by depth-aided PnP across the gap frames."""
+def _same_transform(A: np.ndarray, B: np.ndarray, max_deg: float = 4.0, max_shift: float = 0.2) -> bool:
+    dR = A[:3, :3].T @ B[:3, :3]
+    ang = math.degrees(math.acos(float(np.clip((np.trace(dR) - 1) / 2, -1, 1))))
+    return ang < max_deg and float(np.linalg.norm(A[:3, 3] - B[:3, 3])) < max_shift
+
+
+def _plausible(M: np.ndarray, base: SfMResult, m: SfMResult, margin: float = 3.0) -> bool:
+    """Model m's cameras, moved by M, must stay within reach of the base walk (same property):
+    within ``margin`` plus m's own extent of the base cameras' bounding box."""
+    cb = np.array([T[:3, 3] for T in base.poses.values()])
+    cm = np.array([(M @ T)[:3, 3] for T in m.poses.values()])
+    reach = margin + float(np.ptp(cm, axis=0).max())
+    lo, hi = cb.min(axis=0) - reach, cb.max(axis=0) + reach
+    return bool(((cm >= lo) & (cm <= hi)).all())
+
+
+def _relocalise(clip: VideoClip, base: SfMResult, m: SfMResult, S: np.ndarray, tries: int = 10):
+    """Rigid transform from model m's world into base's world, or None.
+
+    Frames of m are posed against the most similar base frames (appearance similarity, with a bonus
+    for neighbours in time) by depth-aided PnP; each success implies one transform. The transform
+    is accepted when two different frame pairs agree on it, or one pair has a large inlier set.
+    """
+    a_keys, b_keys = np.array(sorted(base.poses)), np.array(sorted(m.poses))
+    score = S[np.ix_(a_keys, b_keys)] + 0.05 * (np.abs(a_keys[:, None] - b_keys[None, :]) <= 3)
+    order = np.argsort(-score, axis=None)
+    found: list[tuple[np.ndarray, int]] = []
+    used_a, used_b = set(), set()
+    for flat in order:
+        if len(used_b) >= tries:
+            break
+        ia, ib = np.unravel_index(flat, score.shape)
+        a, b = int(a_keys[ia]), int(b_keys[ib])
+        if a in used_a or b in used_b:  # spread the attempts over different frames
+            continue
+        used_a.add(a)
+        used_b.add(b)
+        r = _pnp_step(clip, base.K, base.poses[a], a, b, predict_depth(clip.frames[a].image))
+        if r is None:
+            continue
+        M = r[0] @ np.linalg.inv(m.poses[b])
+        if not _plausible(M, base, m):
+            continue
+        for M2, n2 in found:
+            if _same_transform(M, M2):
+                return M if r[1] >= n2 else M2
+        found.append((M, r[1]))
+    strong = [x for x in found if x[1] >= 60]
+    return max(strong, key=lambda x: x[1])[0] if strong else None
+
+
+def bridge_models(clip: VideoClip, models: list[SfMResult], D: np.ndarray | None = None) -> SfMResult:
+    """Join SfM models that a fast turn or a bland wall split apart.
+
+    Every model is first scaled to the depth model's units, so models differ only by a rigid
+    transform. Starting from the largest model, each remaining model is relocalised against the
+    growing base (``_relocalise``); models that fail are retried after others have joined, since a
+    bigger base offers more frames to match against.
+    """
     for m in models:
         _metric_normalise(clip, m)
-    models.sort(key=lambda m: float(np.median(list(m.poses))))
-    base = models[0]
-    joined, broken = 1, 0
-    for m in models[1:]:
-        a = max(base.poses)
-        b = min(m.poses)
-        if b <= a:  # overlapping in time: bridge from the base frame closest before m starts
-            before = [k for k in base.poses if k < b]
-            if not before:
-                broken += 1
+    D = frame_descriptors(clip) if D is None else D
+    S = D @ D.T
+    models.sort(key=lambda m: -m.registered)
+    base, rest = models[0], models[1:]
+    joined = 1
+    progress = True
+    while rest and progress:
+        progress = False
+        for m in list(rest):
+            M = _relocalise(clip, base, m, S)
+            if M is None:
                 continue
-            a = max(before)
-        T = base.poses[a]
-        ok = True
-        f = a
-        for nxt in range(a + 1, b + 1):
-            T_next = _pnp_step(clip, base.K, T, f, nxt, predict_depth(clip.frames[f].image))
-            if T_next is None:
-                ok = False
-                break
-            T, f = T_next, nxt
-        if not ok:
-            broken += 1
-            continue
-        M = T @ np.linalg.inv(m.poses[b])  # model m's world -> base world
-        offset = len(base.points)
-        base.points = np.vstack([base.points, m.points @ M[:3, :3].T + M[:3, 3]])
-        for k, Tk in m.poses.items():
-            if k not in base.poses:
-                base.poses[k] = M @ Tk
-                uv, pid = m.obs[k]
-                base.obs[k] = (uv, pid + offset)
-        joined += 1
+            offset = len(base.points)
+            base.points = np.vstack([base.points, m.points @ M[:3, :3].T + M[:3, 3]])
+            for k, Tk in m.poses.items():
+                if k not in base.poses:
+                    base.poses[k] = M @ Tk
+                    uv, pid = m.obs[k]
+                    base.obs[k] = (uv, pid + offset)
+            rest.remove(m)
+            joined += 1
+            progress = True
     base.registered = len(base.poses)
-    base.notes = (f"structure from motion: {len(models)} models joined into {joined} by depth-aided PnP bridges"
-                  f"{f' ({broken} could not be bridged and were dropped)' if broken else ''}; "
-                  f"{base.registered}/{len(clip.frames)} frames posed")
+    dropped = sum(m.registered for m in rest)
+    base.notes = (f"structure from motion split the walk into {len(models)} pieces; {joined - 1} of the "
+                  f"{len(models) - 1} smaller ones were joined to the largest (depth-aided PnP, two agreeing "
+                  f"frame pairs)"
+                  f"{f', {len(rest)} with {dropped} frames could not be placed and were dropped' if rest else ''}"
+                  f"; {base.registered}/{len(clip.frames)} frames posed" + _coverage_note(base.registered, len(clip.frames)))
     return base
+
+
+def _coverage_note(posed: int, total: int) -> str:
+    if posed >= 0.6 * total:
+        return ""
+    return (f". Only {100 * posed / total:.0f} % of the walk is reconstructed: rooms outside it are missing and "
+            "rooms at its edge may be cut short (re-record with slower turns, protocol B)")
 
 
 def gravity_up(poses: dict[int, np.ndarray]) -> np.ndarray:
@@ -346,7 +475,7 @@ def run_video(path: Path, max_dense: int = 60) -> VideoResult:
     R_align = _align_world(gravity_up(sfm.poses))
     t = time.perf_counter()
     # pass 1: geometry in model units -> scale cues; pass 2: metric
-    scene1, _ = build_scene(clip, sfm, ratios, depths, R_align, raw)
+    scene1, world_T1 = build_scene(clip, sfm, ratios, depths, R_align, raw)
     lay1 = build_layout(scene1, VIDEO_CORE)
     cues = [S.model_cue()]
     ceilings = [r.ceiling_y - r.floor_y for r in lay1.rooms if r.ceiling_y is not None]
@@ -354,6 +483,11 @@ def run_video(path: Path, max_dense: int = 60) -> VideoResult:
     cues.append(S.door_cue([c.h1 for r in lay1.rooms for _, c in r.openings if c.kind == "door"]))
     cam_h = lay1.frame.height(scene1.cams)
     cues.append(S.camera_cue(list(np.clip(cam_h, 0.3, 2.5)), "video"))
+    views1 = [View(clip.frames[k].image, sfm.K, Tw, (depths[k] / ratios[k] * raw).astype(np.float32), sfm.K,
+                   f"frame{clip.frames[k].index}") for k, Tw in world_T1.items()]
+    sheet = find_sheet(views1, lay1.frame.floor_y, max_views=24)
+    if sheet is not None:
+        cues.append(S.paper_cue(sheet.long_raw, sheet.paper, sheet.sigma, sheet.detail))
     factor, sigma, info = S.fuse([c for c in cues if c is not None])
     scene, world_T = build_scene(clip, sfm, ratios, depths, R_align, raw * factor)
     layout = build_layout(scene, VIDEO_CORE)
