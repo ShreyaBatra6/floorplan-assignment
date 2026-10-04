@@ -71,11 +71,12 @@ def camera_cue(heights_raw: list[float], tier: str) -> Cue | None:
     return Cue("camera", math.log(prior / m), CAMERA_SIGMA, f"camera height {m:.2f} (raw) vs prior {prior} m")
 
 
-def paper_cue(length_raw: float | None, paper: str = "A4") -> Cue | None:
+def paper_cue(length_raw: float | None, paper: str = "A4", sigma: float = PAPER_SIGMA, detail: str = "") -> Cue | None:
     if not length_raw:
         return None
     long_side = 0.297 if paper == "A4" else 0.2794
-    return Cue("paper", math.log(long_side / length_raw), PAPER_SIGMA, f"{paper} sheet long side {length_raw:.3f} (raw)")
+    return Cue("paper", math.log(long_side / length_raw), sigma,
+               detail or f"{paper} sheet long side {length_raw:.3f} (raw)")
 
 
 def fuse(cues: list[Cue]) -> tuple[float, float, ScaleInfo]:
