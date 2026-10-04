@@ -168,6 +168,11 @@ def eval_plan(plan: Path = typer.Argument(..., help="plan.json"),
 
 
 def main() -> None:
+    for stream in (sys.stdout, sys.stderr):  # Windows consoles default to cp1252; plans print m2 symbols
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     try:
         app()
     except KeyboardInterrupt:  # pragma: no cover
