@@ -201,5 +201,5 @@ def _photo_stitch_gates(scores: list[CaptureScore]):
                f"footprint {('%+.1f%%' % (100 * fp[0].rel)) if fp else 'n/a'}")
         out.append(Gate("photo whole-property stitch", "photo",
                         "one plan, correct adjacency, no overlaps, footprint +-8% with calibrated interval", val,
-                        ok_adj and s.overlaps == 0 and ok_fp, s.capture))
+                        ok_adj and s.overlaps == 0 and ok_fp, s.capture, (ok_adj + (s.overlaps == 0) + ok_fp) / 3))
     return out

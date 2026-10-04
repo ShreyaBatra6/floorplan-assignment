@@ -26,3 +26,7 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+# fix-loop regenerations: keep only each run's metrics and report
+fixloop/runs/*/*
+!fixloop/runs/*/metrics.json
+!fixloop/runs/*/benchmark_report.md

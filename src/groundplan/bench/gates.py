@@ -142,6 +142,7 @@ class Gate:
     value: str
     passed: bool | None  # None = not measured
     detail: str = ""
+    score: float | None = None  # share of the requirement met (1.0 = passes); ranks the failing gates
 
 
 def opening_gate(scores: list[CaptureScore], tier: str) -> Gate:
@@ -153,7 +154,8 @@ def opening_gate(scores: list[CaptureScore], tier: str) -> Gate:
     rate = good / total
     return Gate("opening widths", tier, "<=2 cm on >=85%, misses+phantoms count", f"{rate:.0%} ({good}/{total})",
                 rate >= OPENING_PASS_RATE,
-                f"missed {sum(x.openings_missed for x in s)}, phantom {sum(x.openings_phantom for x in s)}")
+                f"missed {sum(x.openings_missed for x in s)}, phantom {sum(x.openings_phantom for x in s)}",
+                min(1.0, rate / OPENING_PASS_RATE))
 
 
 def ceiling_gate(scores: list[CaptureScore], tier: str) -> Gate:
@@ -163,7 +165,7 @@ def ceiling_gate(scores: list[CaptureScore], tier: str) -> Gate:
     errs = np.array([i.err for i in items])
     ok = int((np.abs(errs) <= CEILING_TOL_M + 1e-9).sum())
     return Gate("ceiling height", tier, "<=1.5 cm per room", f"{ok}/{len(items)} rooms; max {np.abs(errs).max() * 100:.1f} cm",
-                ok == len(items), f"bias {errs.mean() * 100:+.1f} cm, sd {errs.std() * 100:.1f} cm")
+                ok == len(items), f"bias {errs.mean() * 100:+.1f} cm, sd {errs.std() * 100:.1f} cm", ok / len(items))
 
 
 def wall_gate(scores: list[CaptureScore], tier: str) -> Gate:
@@ -179,7 +181,8 @@ def wall_gate(scores: list[CaptureScore], tier: str) -> Gate:
     ok = sum(abs(i.err) <= t for i, t in zip(items, tol))
     cov = np.mean([i.covered for i in items])
     return Gate("wall lengths", tier, thr, f"{ok}/{len(items)} within; coverage {cov:.0%}",
-                ok == len(items) and COVERAGE_BAND[0] <= cov, f"median |err| {np.median([abs(i.err) for i in items]) * 100:.1f} cm")
+                ok == len(items) and COVERAGE_BAND[0] <= cov, f"median |err| {np.median([abs(i.err) for i in items]) * 100:.1f} cm",
+                min(ok / len(items), cov / COVERAGE_BAND[0], 1.0))
 
 
 def calibration_table(scores: list[CaptureScore]) -> list[dict]:

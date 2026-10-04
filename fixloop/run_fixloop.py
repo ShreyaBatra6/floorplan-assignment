@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -29,6 +30,20 @@ def sh(cmd: list[str], cwd: Path = ROOT, env: dict | None = None) -> str:
         sys.stderr.write(out.stdout[-4000:] + out.stderr[-4000:])
         raise SystemExit(f"failed: {' '.join(cmd)}")
     return out.stdout
+
+
+def find_uv() -> str:
+    """uv from $UV, PATH, or the usual per-user install folders (pip --user does not add them to PATH)."""
+    found = os.environ.get("UV") or shutil.which("uv")
+    if found:
+        return found
+    homes = [Path(os.environ.get("APPDATA", "")) / "Python", Path.home() / ".local" / "bin", Path.home() / ".cargo" / "bin"]
+    for base in homes:
+        for pattern in ("*/Scripts/uv.exe", "uv.exe", "uv"):
+            hits = sorted(base.glob(pattern)) if base.exists() else []
+            if hits:
+                return str(hits[-1])
+    raise SystemExit("uv not found: `python -m pip install uv`, or set UV to the uv executable")
 
 
 def safe(ref: str) -> str:
@@ -46,7 +61,7 @@ def run_ref(ref: str, manifest: Path, out_dir: Path) -> dict:
     env.setdefault("GROUNDPLAN_DATA", str(ROOT / "data"))
     env["UV_PROJECT_ENVIRONMENT"] = str(ENV_BASE / f"groundplan-fixloop-{safe(ref)}")  # one env per ref
     print(f"[{ref}] running the benchmark from {wt} ...", flush=True)
-    sh(["uv", "run", "--project", str(wt), "--all-extras", "groundplan", "bench", "run",
+    sh([find_uv(), "run", "--project", str(wt), "--all-extras", "groundplan", "bench", "run",
         "--manifest", str(manifest), "--out", str(res)], cwd=wt, env=env)
     return json.loads((res / "metrics.json").read_text(encoding="utf-8"))
 
