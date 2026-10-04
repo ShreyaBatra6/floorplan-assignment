@@ -1,0 +1,127 @@
+# Concealed-damage rules: what visible damage may be hiding.
+#
+# Every rule is evaluated against each damage region (and, for `pair` rules, against pairs of
+# regions in the same room). A flag records the rule id, the rule text and the values that
+# satisfied the condition. Conditions available to `when`:
+#   classes            damage class is one of these
+#   surfaces           surface kind is one of: wall, ceiling, floor
+#   bottom_below_m     lowest point of the region is within this height of the floor (walls)
+#   room_types         the room (or a room sharing the wall) is one of these types
+#   near_window_m      region is within this distance of a window on the same wall
+#   near_opening_top_m region is within this distance of a door/window head corner
+#   min_area_m2        region area at least this
+# References are to the industry standards a restoration contractor works to.
+
+rules:
+  - id: CDR-01
+    name: ceiling water stain
+    when: {classes: [water_stain], surfaces: [ceiling]}
+    suspected: >-
+      Wet ceiling cavity: saturated insulation and possibly an active leak above
+      (roof, plumbing run, HVAC condensate); stains appear after the cavity is already wet.
+    severity: high
+    verify: Moisture meter and thermal image across the stain and 1 m beyond; inspect the space above.
+    reference: IICRC S500 (water damage restoration), Sec. 12 inspection
+
+  - id: CDR-02
+    name: water stain at wall base
+    when: {classes: [water_stain], surfaces: [wall], bottom_below_m: 0.15}
+    suspected: >-
+      Floor-level water wicking up the wall board: wet bottom plate, wall insulation and
+      flooring underlay, typically well beyond the visible tide line.
+    severity: high
+    verify: Moisture readings at 0.3 m, 0.6 m and 1.2 m along the wall; check the floor covering.
+    reference: IICRC S500, flood-cut practice for wicking in gypsum board
+
+  - id: CDR-03
+    name: water damage on a wet-room wall
+    when: {classes: [water_stain, peeling_paint, mold], surfaces: [wall], room_types: [bathroom, kitchen, laundry]}
+    suspected: >-
+      Leak in supply or drain lines inside the wall cavity, or failed tile/sealant joints.
+    severity: medium
+    verify: Moisture mapping of the wall; pressure-test the supply lines; inspect behind fixtures.
+    reference: IICRC S500
+
+  - id: CDR-04
+    name: water damage near a window
+    when: {classes: [water_stain, peeling_paint, mold], surfaces: [wall], near_window_m: 0.4}
+    suspected: >-
+      Failed window flashing or sill seal; wet framing below and beside the window.
+    severity: medium
+    verify: Moisture readings at the sill corners; water test of the window head and jambs.
+    reference: IICRC S500; ASTM E2128 (water leakage evaluation)
+
+  - id: CDR-05
+    name: visible mold
+    when: {classes: [mold]}
+    suspected: >-
+      Growth on the cavity side of the surface extending beyond the visible area, sustained by a
+      moisture source that must be found.
+    severity: high
+    verify: Moisture mapping; surface or air sampling; open-up inspection under containment.
+    reference: IICRC S520 (mold remediation)
+
+  - id: CDR-06
+    name: large mold area
+    when: {classes: [mold], min_area_m2: 0.93}
+    suspected: >-
+      Contiguous growth above 10 sq ft: professional remediation with containment is indicated.
+    severity: high
+    verify: Remediation assessment by a qualified professional.
+    reference: IICRC S520; US EPA mold remediation guidance (10 sq ft threshold)
+
+  - id: CDR-07
+    name: crack from an opening corner
+    when: {classes: [crack], surfaces: [wall], near_opening_top_m: 0.35}
+    suspected: >-
+      Differential settlement or header deflection over the opening; possible framing distress.
+    severity: medium
+    verify: Crack width gauge and monitoring; check the opening for racking (door binding, out-of-square).
+    reference: BRE Digest 251 (assessing cracks in buildings)
+
+  - id: CDR-08
+    name: ceiling crack
+    when: {classes: [crack], surfaces: [ceiling]}
+    suspected: >-
+      Joint-tape failure from moisture or movement in the structure above.
+    severity: low
+    verify: Check for moisture at the crack; monitor for growth.
+    reference: BRE Digest 251
+
+  - id: CDR-09
+    name: hole in wall board
+    when: {classes: [hole], surfaces: [wall, ceiling]}
+    suspected: >-
+      Open cavity: possible damage to wiring or pipework behind, and a pest or moisture entry path.
+    severity: low
+    verify: Inspection camera through the opening before patching.
+    reference: General building inspection practice
+
+  - id: CDR-10
+    name: peeling paint low on a wall
+    when: {classes: [peeling_paint], surfaces: [wall], bottom_below_m: 0.3}
+    suspected: >-
+      Moisture behind the paint film (rising damp or a leak at floor level).
+    severity: medium
+    verify: Moisture meter readings across the affected band.
+    reference: IICRC S500
+
+  - id: CDR-11
+    name: water stain on floor
+    when: {classes: [water_stain], surfaces: [floor]}
+    suspected: >-
+      Saturated underlay or subfloor below the finished floor; possible cupping or delamination to come.
+    severity: high
+    verify: Moisture readings through the floor covering; lift a perimeter section if readings are high.
+    reference: IICRC S500
+
+pair_rules:
+  - id: CDR-12
+    name: water damage across the wall-ceiling junction
+    when: {classes: [water_stain, mold], surfaces: [[wall, ceiling]], max_gap_m: 0.3}
+    suspected: >-
+      One water source spreading through the junction: concealed wetting in the top plate and the
+      ceiling cavity between the two visible regions.
+    severity: high
+    verify: Moisture mapping along the junction; inspect the space above the wall.
+    reference: IICRC S500

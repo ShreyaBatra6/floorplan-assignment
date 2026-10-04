@@ -161,7 +161,10 @@ def _counterpart(spec: FlatSpec, op: OpeningSpec, other: RoomSpec) -> dict | Non
     opposite = {"S": "N", "N": "S", "E": "W", "W": "E"}[op.side]
     oa, ob = side_segment(other, opposite)
     ou = (ob - oa) / np.linalg.norm(ob - oa)
-    on_line = abs(np.cross(ou, p0 - oa)) < 1e-6 and abs(np.cross(ou, p1 - oa)) < 1e-6
+    def cross2(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    on_line = abs(cross2(ou, p0 - oa)) < 1e-6 and abs(cross2(ou, p1 - oa)) < 1e-6
     s0, s1 = sorted(((p0 - oa) @ ou, (p1 - oa) @ ou))
     if not on_line or s0 < -1e-6 or s1 > np.linalg.norm(ob - oa) + 1e-6:
         return None

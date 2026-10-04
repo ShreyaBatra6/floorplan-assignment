@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from scipy import ndimage
-from skimage.morphology import disk, remove_small_objects
+from skimage.morphology import disk
 from skimage.segmentation import watershed
 
 from groundplan.geometry.occupancy import Grid, WallEvidence, fill_small_holes
@@ -50,7 +50,12 @@ def interior_mask(grid: Grid, free: np.ndarray, floor: np.ndarray, walls: np.nda
     r = max(int(round(p.open_radius_m / grid.res)), 1)
     inside = ndimage.binary_opening(inside, structure=disk(r))
     min_cells = int(p.min_room_area / grid.res**2)
-    inside = remove_small_objects(inside, min_size=max(min_cells, 1))
+    lab, n = ndimage.label(inside)
+    if n:
+        sizes = ndimage.sum(np.ones_like(lab), lab, index=np.arange(1, n + 1))
+        keep = np.zeros(n + 1, bool)
+        keep[1:] = sizes >= max(min_cells, 1)
+        inside = keep[lab]
     inside = fill_small_holes(inside, max_area_cells=int(1.5 / grid.res**2))
     return inside
 
