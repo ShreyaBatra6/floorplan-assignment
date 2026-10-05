@@ -167,9 +167,28 @@ Coverage per tier and quantity: **[bench]**.
 
 ## 9. Benchmark results
 
-Composition as specified (multi-room + connector at all tiers, staged two-class damage, repeated
-room per tier, laser truth, Polycam head-to-head): `docs/BENCHMARK_PROTOCOL.md`.
-Gates, repeatability table, head-to-head table and timing: **[bench]**.
+Composition as specified (multi-room + connector at all tiers, staged two-class damage, repeated room
+per tier, laser truth, Polycam head-to-head): `docs/BENCHMARK_PROTOCOL.md`. Our own captures need an
+iPhone 15 and a LiDAR device, which were not available in the submission window, so the numbers below
+are from the **public stand-in** (`docs/PUBLIC_BENCHMARK.md`): three ARKitScenes homes (2020 iPad Pro),
+each recorded three times (LiDAR tier: repeatability), one video and six stills per home; truth
+measured on the homes' Faro laser scans and reviewed room by room (walls a box cannot define and
+unmeasurable openings are left out, with reasons). Report: `benchmark/public/results/full_6b78d8d/`.
+
+| Gate (stand-in, before the fix) | LiDAR | Video | Photo |
+|---|---|---|---|
+| Wall lengths | 10/15 within max(2 cm, 1 %); coverage 47 % | 0/2 within 3 % | 0/2 within 8 %; coverage 100 % |
+| Ceiling height (<= 1.5 cm) | 3/9 rooms; max 3.9 cm | 1/1 (0.6 cm) | 0/1 (36.6 cm) |
+| Opening widths | 0 % (0/10: 2 missed, 4 phantom) | not assessed | not assessed |
+| Repeatability (1 cm / 0.5 %) | 1 of 6 pairs (walls within: 3/3, 2/3, 2/3, 2/3, 1/2, 1/2) | - | - |
+| Drift ablation, median wall error on / off | 422378: 1.0 / 3.5 cm; 466183: 7.2 / 7.2 cm; 471948: 10.7 / 4.0 cm | - | - |
+
+Video: a plain 1920x1440 clip, all 280 sampled frames in one structure-from-motion model. Photo:
+six stills without compass headings (single room, so the stitch row cannot pass). Video and photo of
+the other two homes were not run in time (about 35 minutes of structure from motion per clip on the
+development laptop); `benchmark/public/manifest.yaml` regenerates them. Uncalibrated intervals
+(the prior) are too narrow at the LiDAR tier: coverage 47 %. Drift correction helps where loop closures
+are found (422378) and hurt on 471948, where none was accepted and heading anchoring alone moved the walls.
 
 ## 10. Damage, flags, scope
 
