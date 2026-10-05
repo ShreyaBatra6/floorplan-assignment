@@ -181,6 +181,7 @@ unmeasurable openings are left out, with reasons). Report: `benchmark/public/res
 | Ceiling height (<= 1.5 cm) | 3/9 rooms; max 3.9 cm | 1/1 (0.6 cm) | 0/1 (36.6 cm) |
 | Opening widths | 0 % (0/10: 2 missed, 4 phantom) | not assessed | not assessed |
 | Repeatability (1 cm / 0.5 %) | 1 of 6 pairs (walls within: 3/3, 2/3, 2/3, 2/3, 1/2, 1/2) | - | - |
+| Head-to-head PROXY vs on-device ARKit mesh (not a consumer app) | beat or tie 19/24; 13/18 without mesh-box failures (`benchmark/public/h2h_proxy/`) | - | - |
 | Drift ablation, median wall error on / off | 422378: 1.0 / 3.5 cm; 466183: 7.2 / 7.2 cm; 471948: 10.7 / 4.0 cm | - | - |
 
 Video: a plain 1920x1440 clip, all 280 sampled frames in one structure-from-motion model. Photo:
