@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from groundplan.geometry.openings import detect_openings
+from groundplan.geometry.openings import OpeningParams, detect_openings
 
 
 def _wall_with_holes(holes, length=4.0, height=2.5, step=0.02):
@@ -33,7 +33,7 @@ def test_low_floor_level_gap_is_not_an_opening_but_the_door_is():
     solid_xy = np.c_[s, np.zeros_like(s)]
     rs_xy, rs_h, re_xy, re_h = _rays_through([door, low_gap])
     cands = detect_openings(1, 0.0, 1, np.array([0.0, 0.0]), np.array([4.0, 0.0]), 2.5, solid_xy, h,
-                            rs_xy, rs_h, re_xy, re_h, None)
+                            rs_xy, rs_h, re_xy, re_h, None, OpeningParams(reject_low_gaps=True))
     assert len(cands) == 1
     c = cands[0]
     assert c.kind == "door" and abs(c.width - 0.9) < 0.03 and c.s0 > 2.8

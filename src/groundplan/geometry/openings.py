@@ -67,6 +67,10 @@ class OpeningParams:
     door_bottom_max: float = 0.15
     door_top_min: float = 1.6
     walk_min_height: float = 1.8  # anything reaching the floor must be this tall to be a door or passage
+    # off: the rejected regions are then searched for damage, and on the assessor sample that produced a
+    # false positive behind furniture (tests/test_staged_damage.py); they need to reach damage as
+    # unobserved areas first (fixloop/DECLARATION.md, "What follows")
+    reject_low_gaps: bool = False
     passage_width_min: float = 1.25
     miss_max_range: float = 3.2  # a plane closer than this must have returned depth if it were solid
     mirror_nn_dist: float = 0.04
@@ -311,7 +315,7 @@ def detect_openings(
             h0, sig_s = 0.0, 0.0  # a "sill" a few cm high is an unobserved threshold: the opening reaches the floor
         if h1 - h0 < p.min_height:
             continue
-        if h0 == 0.0 and h1 < p.walk_min_height:
+        if p.reject_low_gaps and h0 == 0.0 and h1 < p.walk_min_height:
             continue  # reaches the floor but too low to walk through: the gap under or behind furniture, not an opening
         sel = beyond_idx[(s_cr[beyond_idx] >= s0) & (s_cr[beyond_idx] < s1) &
                          (cross_h[beyond_idx] >= h0) & (cross_h[beyond_idx] < h1)]
