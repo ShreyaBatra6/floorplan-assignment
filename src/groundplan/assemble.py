@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
+from shapely.validation import make_valid
 
 from groundplan.config import BUDGETS, CEILING_PRIOR, ErrorBudget
 from groundplan.contract import (
@@ -247,7 +248,8 @@ def build_stitched(layout: SceneLayout, rooms: list[Room], ctx: AssembleContext,
                 evidence=f"parallel wall faces {thickness * 100:.0f} cm apart",
             ))
 
-    polys = [Polygon(r.polygon) for r in rooms]
+    # an outline can touch itself after jog simplification; GEOS refuses set operations on it
+    polys = [make_valid(Polygon(r.polygon)) for r in rooms]
     overlaps = []
     for i in range(len(polys)):
         for j in range(i + 1, len(polys)):
