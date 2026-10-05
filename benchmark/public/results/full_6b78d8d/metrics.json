@@ -1,0 +1,1079 @@
+{
+  "captures": [
+    {
+      "capture": "ark_466183_lidar_1",
+      "tier": "lidar",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "S",
+          "truth": 4.9803,
+          "value": 4.941468,
+          "lo": 4.922981,
+          "hi": 4.959954,
+          "err": -0.03883199999999931,
+          "rel": -0.007797120655382068,
+          "covered": false
+        },
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "N",
+          "truth": 4.9803,
+          "value": 4.907876,
+          "lo": 4.890874,
+          "hi": 4.924877,
+          "err": -0.07242399999999982,
+          "rel": -0.01454209585767922,
+          "covered": false
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room1",
+          "ref": "ceiling",
+          "truth": 2.9744,
+          "value": 2.939092,
+          "lo": 2.926066,
+          "hi": 2.952119,
+          "err": -0.03530800000000012,
+          "rel": -0.01187062937062941,
+          "covered": false
+        }
+      ],
+      "openings_gt": 0,
+      "openings_matched_within": 0,
+      "openings_missed": 0,
+      "openings_phantom": 0,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 2,
+      "wall_count_mismatch": 1,
+      "runtime_s": 62.165,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_466183_lidar_2",
+      "tier": "lidar",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "S",
+          "truth": 4.9803,
+          "value": 4.945204,
+          "lo": 4.926614,
+          "hi": 4.963794,
+          "err": -0.03509599999999935,
+          "rel": -0.0070469650422664,
+          "covered": false
+        },
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "N",
+          "truth": 4.9803,
+          "value": 4.908143,
+          "lo": 4.890101,
+          "hi": 4.926184,
+          "err": -0.0721569999999998,
+          "rel": -0.014488484629439954,
+          "covered": false
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room1",
+          "ref": "ceiling",
+          "truth": 2.9744,
+          "value": 2.946277,
+          "lo": 2.932946,
+          "hi": 2.959607,
+          "err": -0.028123000000000342,
+          "rel": -0.00945501613770856,
+          "covered": false
+        }
+      ],
+      "openings_gt": 0,
+      "openings_matched_within": 0,
+      "openings_missed": 0,
+      "openings_phantom": 0,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 2,
+      "wall_count_mismatch": 1,
+      "runtime_s": 51.641,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_466183_lidar_3",
+      "tier": "lidar",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "S",
+          "truth": 4.9803,
+          "value": 4.991771,
+          "lo": 4.972516,
+          "hi": 5.011027,
+          "err": 0.011471000000000231,
+          "rel": 0.0023032749031183324,
+          "covered": true
+        },
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "N",
+          "truth": 4.9803,
+          "value": 4.90242,
+          "lo": 4.884251,
+          "hi": 4.92059,
+          "err": -0.0778799999999995,
+          "rel": -0.015637612192036524,
+          "covered": false
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room1",
+          "ref": "ceiling",
+          "truth": 2.9744,
+          "value": 2.935638,
+          "lo": 2.922609,
+          "hi": 2.948667,
+          "err": -0.038762000000000185,
+          "rel": -0.013031871974179729,
+          "covered": false
+        }
+      ],
+      "openings_gt": 0,
+      "openings_matched_within": 0,
+      "openings_missed": 0,
+      "openings_phantom": 0,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 2,
+      "wall_count_mismatch": 1,
+      "runtime_s": 41.318,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_466183_video_1",
+      "tier": "video",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "S",
+          "truth": 4.9803,
+          "value": 5.413852,
+          "lo": 4.969933,
+          "hi": 5.895642,
+          "err": 0.4335520000000006,
+          "rel": 0.08705339035801068,
+          "covered": true
+        },
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "N",
+          "truth": 4.9803,
+          "value": 4.467705,
+          "lo": 4.095388,
+          "hi": 4.870812,
+          "err": -0.5125950000000001,
+          "rel": -0.10292452261911936,
+          "covered": false
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room1",
+          "ref": "ceiling",
+          "truth": 2.9744,
+          "value": 2.9684,
+          "lo": 2.723679,
+          "hi": 3.233782,
+          "err": -0.006000000000000227,
+          "rel": -0.0020172135556751703,
+          "covered": true
+        }
+      ],
+      "openings_gt": 0,
+      "openings_matched_within": 0,
+      "openings_missed": 0,
+      "openings_phantom": 0,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 1,
+      "wall_count_mismatch": 1,
+      "runtime_s": 2210.092,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_466183_photo_1",
+      "tier": "photo",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "S",
+          "truth": 4.9803,
+          "value": 4.35,
+          "lo": 2.372875,
+          "hi": 6.889121,
+          "err": -0.6303000000000001,
+          "rel": -0.12655864104572015,
+          "covered": true
+        },
+        {
+          "kind": "wall_length",
+          "room": "room1",
+          "ref": "N",
+          "truth": 4.9803,
+          "value": 4.087905,
+          "lo": 2.415187,
+          "hi": 6.332779,
+          "err": -0.8923949999999996,
+          "rel": -0.17918498885609294,
+          "covered": true
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room1",
+          "ref": "ceiling",
+          "truth": 2.9744,
+          "value": 2.608446,
+          "lo": 1.736126,
+          "hi": 3.902114,
+          "err": -0.36595400000000033,
+          "rel": -0.12303456159225401,
+          "covered": true
+        }
+      ],
+      "openings_gt": 0,
+      "openings_matched_within": 0,
+      "openings_missed": 0,
+      "openings_phantom": 0,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 1,
+      "wall_count_mismatch": 1,
+      "runtime_s": 17.258,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_422378_lidar_1",
+      "tier": "lidar",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room2",
+          "ref": "E",
+          "truth": 3.2796,
+          "value": 3.286077,
+          "lo": 3.269449,
+          "hi": 3.302705,
+          "err": 0.006477000000000288,
+          "rel": 0.001974935967801039,
+          "covered": true
+        },
+        {
+          "kind": "wall_length",
+          "room": "room2",
+          "ref": "N",
+          "truth": 3.2565,
+          "value": 3.246116,
+          "lo": 3.229265,
+          "hi": 3.262967,
+          "err": -0.010384000000000171,
+          "rel": -0.003188699524028918,
+          "covered": true
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room2",
+          "ref": "ceiling",
+          "truth": 2.2918,
+          "value": 2.278607,
+          "lo": 2.266082,
+          "hi": 2.291132,
+          "err": -0.013192999999999788,
+          "rel": -0.005756610524478484,
+          "covered": false
+        },
+        {
+          "kind": "opening_width",
+          "room": "room2",
+          "ref": "N2",
+          "truth": 1.77,
+          "value": 1.74,
+          "lo": 1.618258,
+          "hi": 1.861742,
+          "err": -0.030000000000000027,
+          "rel": -0.016949152542372895,
+          "covered": true
+        }
+      ],
+      "openings_gt": 2,
+      "openings_matched_within": 0,
+      "openings_missed": 1,
+      "openings_phantom": 3,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 2,
+      "wall_count_mismatch": 1,
+      "runtime_s": 69.704,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_422378_lidar_2",
+      "tier": "lidar",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room2",
+          "ref": "E",
+          "truth": 3.2796,
+          "value": 3.253254,
+          "lo": 3.236625,
+          "hi": 3.269883,
+          "err": -0.02634599999999976,
+          "rel": -0.008033296743505232,
+          "covered": false
+        },
+        {
+          "kind": "wall_length",
+          "room": "room2",
+          "ref": "N",
+          "truth": 3.2565,
+          "value": 3.253254,
+          "lo": 3.236625,
+          "hi": 3.269883,
+          "err": -0.00324599999999986,
+          "rel": -0.000996775679410367,
+          "covered": true
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room2",
+          "ref": "ceiling",
+          "truth": 2.2918,
+          "value": 2.276642,
+          "lo": 2.263949,
+          "hi": 2.289335,
+          "err": -0.015158000000000005,
+          "rel": -0.006614015184571082,
+          "covered": false
+        },
+        {
+          "kind": "opening_width",
+          "room": "room2",
+          "ref": "D1",
+          "truth": 0.79,
+          "value": 0.95,
+          "lo": 0.622356,
+          "hi": 1.277644,
+          "err": 0.15999999999999992,
+          "rel": 0.20253164556962014,
+          "covered": true
+        },
+        {
+          "kind": "opening_width",
+          "room": "room2",
+          "ref": "N2",
+          "truth": 1.77,
+          "value": 1.805,
+          "lo": 1.720078,
+          "hi": 1.889922,
+          "err": 0.03499999999999992,
+          "rel": 0.01977401129943498,
+          "covered": true
+        }
+      ],
+      "openings_gt": 2,
+      "openings_matched_within": 0,
+      "openings_missed": 0,
+      "openings_phantom": 0,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 2,
+      "wall_count_mismatch": 1,
+      "runtime_s": 53.126,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_422378_lidar_3",
+      "tier": "lidar",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room2",
+          "ref": "E",
+          "truth": 3.2796,
+          "value": 3.241518,
+          "lo": 3.224666,
+          "hi": 3.25837,
+          "err": -0.03808199999999973,
+          "rel": -0.011611781924624871,
+          "covered": false
+        },
+        {
+          "kind": "wall_length",
+          "room": "room2",
+          "ref": "N",
+          "truth": 3.2565,
+          "value": 3.241518,
+          "lo": 3.224666,
+          "hi": 3.25837,
+          "err": -0.014981999999999829,
+          "rel": -0.004600644864117866,
+          "covered": true
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room2",
+          "ref": "ceiling",
+          "truth": 2.2918,
+          "value": 2.279037,
+          "lo": 2.266367,
+          "hi": 2.291707,
+          "err": -0.012762999999999636,
+          "rel": -0.005568985077231712,
+          "covered": false
+        },
+        {
+          "kind": "opening_width",
+          "room": "room2",
+          "ref": "D1",
+          "truth": 0.79,
+          "value": 0.91,
+          "lo": 0.792229,
+          "hi": 1.027771,
+          "err": 0.12,
+          "rel": 0.15189873417721517,
+          "covered": false
+        }
+      ],
+      "openings_gt": 2,
+      "openings_matched_within": 0,
+      "openings_missed": 1,
+      "openings_phantom": 1,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 2,
+      "wall_count_mismatch": 1,
+      "runtime_s": 39.498,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_471948_lidar_1",
+      "tier": "lidar",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room2",
+          "ref": "W",
+          "truth": 2.7525,
+          "value": 2.859291,
+          "lo": 2.840826,
+          "hi": 2.877756,
+          "err": 0.10679099999999986,
+          "rel": 0.038797820163487685,
+          "covered": false
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room2",
+          "ref": "ceiling",
+          "truth": 2.3705,
+          "value": 2.347566,
+          "lo": 2.33421,
+          "hi": 2.360922,
+          "err": -0.022933999999999788,
+          "rel": -0.009674752161991053,
+          "covered": false
+        }
+      ],
+      "openings_gt": 0,
+      "openings_matched_within": 0,
+      "openings_missed": 0,
+      "openings_phantom": 0,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 2,
+      "wall_count_mismatch": 1,
+      "runtime_s": 19.279,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_471948_lidar_2",
+      "tier": "lidar",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room2",
+          "ref": "W",
+          "truth": 2.7525,
+          "value": 2.751757,
+          "lo": 2.734189,
+          "hi": 2.769326,
+          "err": -0.0007429999999999382,
+          "rel": -0.0002699364214350366,
+          "covered": true
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room2",
+          "ref": "ceiling",
+          "truth": 2.3705,
+          "value": 2.34635,
+          "lo": 2.332114,
+          "hi": 2.360587,
+          "err": -0.02414999999999967,
+          "rel": -0.01018772410883766,
+          "covered": false
+        }
+      ],
+      "openings_gt": 0,
+      "openings_matched_within": 0,
+      "openings_missed": 0,
+      "openings_phantom": 0,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 2,
+      "wall_count_mismatch": 1,
+      "runtime_s": 15.95,
+      "manual_match": false
+    },
+    {
+      "capture": "ark_471948_lidar_3",
+      "tier": "lidar",
+      "items": [
+        {
+          "kind": "wall_length",
+          "room": "room2",
+          "ref": "W",
+          "truth": 2.7525,
+          "value": 2.748681,
+          "lo": 2.730496,
+          "hi": 2.766866,
+          "err": -0.003819000000000017,
+          "rel": -0.001387465940054502,
+          "covered": true
+        },
+        {
+          "kind": "ceiling_height",
+          "room": "room2",
+          "ref": "ceiling",
+          "truth": 2.3705,
+          "value": 2.356166,
+          "lo": 2.343485,
+          "hi": 2.368848,
+          "err": -0.014333999999999847,
+          "rel": -0.006046825564226892,
+          "covered": false
+        }
+      ],
+      "openings_gt": 0,
+      "openings_matched_within": 0,
+      "openings_missed": 0,
+      "openings_phantom": 0,
+      "adjacency_found": 0,
+      "adjacency_gt": 0,
+      "adjacency_extra": 0,
+      "overlaps": 0,
+      "rooms_matched": 1,
+      "rooms_gt": 1,
+      "rooms_pred": 2,
+      "wall_count_mismatch": 1,
+      "runtime_s": 25.076,
+      "manual_match": false
+    }
+  ],
+  "gates": [
+    {
+      "name": "wall lengths",
+      "tier": "lidar",
+      "threshold": "max(2 cm, 1%) (Round 1, inferred)",
+      "value": "10/15 within; coverage 47%",
+      "passed": false,
+      "detail": "median |err| 2.6 cm",
+      "score": 0.5490196078431373
+    },
+    {
+      "name": "ceiling height",
+      "tier": "lidar",
+      "threshold": "<=1.5 cm per room",
+      "value": "3/9 rooms; max 3.9 cm",
+      "passed": false,
+      "detail": "bias -2.3 cm, sd 0.9 cm",
+      "score": 0.3333333333333333
+    },
+    {
+      "name": "opening widths",
+      "tier": "lidar",
+      "threshold": "<=2 cm on >=85%, misses+phantoms count",
+      "value": "0% (0/10)",
+      "passed": false,
+      "detail": "missed 2, phantom 4",
+      "score": 0.0
+    },
+    {
+      "name": "wall lengths",
+      "tier": "video",
+      "threshold": "+-3% with calibrated intervals",
+      "value": "0/2 within; coverage 50%",
+      "passed": false,
+      "detail": "median |err| 47.3 cm",
+      "score": 0.0
+    },
+    {
+      "name": "ceiling height",
+      "tier": "video",
+      "threshold": "<=1.5 cm per room",
+      "value": "1/1 rooms; max 0.6 cm",
+      "passed": true,
+      "detail": "bias -0.6 cm, sd 0.0 cm",
+      "score": 1.0
+    },
+    {
+      "name": "opening widths",
+      "tier": "video",
+      "threshold": "<=2 cm on >=85%, misses+phantoms count",
+      "value": "n/a",
+      "passed": null,
+      "detail": "",
+      "score": null
+    },
+    {
+      "name": "wall lengths",
+      "tier": "photo",
+      "threshold": "+-8% with calibrated intervals",
+      "value": "0/2 within; coverage 100%",
+      "passed": false,
+      "detail": "median |err| 76.1 cm",
+      "score": 0.0
+    },
+    {
+      "name": "ceiling height",
+      "tier": "photo",
+      "threshold": "<=1.5 cm per room",
+      "value": "0/1 rooms; max 36.6 cm",
+      "passed": false,
+      "detail": "bias -36.6 cm, sd 0.0 cm",
+      "score": 0.0
+    },
+    {
+      "name": "opening widths",
+      "tier": "photo",
+      "threshold": "<=2 cm on >=85%, misses+phantoms count",
+      "value": "n/a",
+      "passed": null,
+      "detail": "",
+      "score": null
+    },
+    {
+      "name": "photo whole-property stitch",
+      "tier": "photo",
+      "threshold": "one plan, correct adjacency, no overlaps, footprint +-8% with calibrated interval",
+      "value": "adjacency 0/0 (+0 extra), overlaps 0, footprint n/a",
+      "passed": false,
+      "detail": "ark_466183_photo_1",
+      "score": 0.6666666666666666
+    }
+  ],
+  "repeatability": [
+    {
+      "pair": [
+        "ark_466183_lidar_1",
+        "ark_466183_lidar_2"
+      ],
+      "tier": "lidar",
+      "rows": [
+        {
+          "room": "room1",
+          "wall": "S",
+          "a": 4.941468,
+          "b": 4.945204,
+          "diff": -0.0037359999999999616,
+          "tol": 0.02471668,
+          "ok": true
+        },
+        {
+          "room": "room1",
+          "wall": "N",
+          "a": 4.907876,
+          "b": 4.908143,
+          "diff": -0.0002670000000000172,
+          "tol": 0.024540047500000002,
+          "ok": true
+        },
+        {
+          "room": "room1",
+          "wall": "ceiling",
+          "a": 2.939092,
+          "b": 2.946277,
+          "diff": -0.007184999999999775,
+          "tol": 0.01,
+          "ok": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "pair": [
+        "ark_466183_lidar_1",
+        "ark_466183_lidar_3"
+      ],
+      "tier": "lidar",
+      "rows": [
+        {
+          "room": "room1",
+          "wall": "S",
+          "a": 4.941468,
+          "b": 4.991771,
+          "diff": -0.05030299999999954,
+          "tol": 0.0248330975,
+          "ok": false
+        },
+        {
+          "room": "room1",
+          "wall": "N",
+          "a": 4.907876,
+          "b": 4.90242,
+          "diff": 0.005455999999999683,
+          "tol": 0.024525740000000004,
+          "ok": true
+        },
+        {
+          "room": "room1",
+          "wall": "ceiling",
+          "a": 2.939092,
+          "b": 2.935638,
+          "diff": 0.003454000000000068,
+          "tol": 0.01,
+          "ok": true
+        }
+      ],
+      "passed": false
+    },
+    {
+      "pair": [
+        "ark_422378_lidar_1",
+        "ark_422378_lidar_2"
+      ],
+      "tier": "lidar",
+      "rows": [
+        {
+          "room": "room2",
+          "wall": "E",
+          "a": 3.286077,
+          "b": 3.253254,
+          "diff": 0.03282300000000005,
+          "tol": 0.016348327500000003,
+          "ok": false
+        },
+        {
+          "room": "room2",
+          "wall": "N",
+          "a": 3.246116,
+          "b": 3.253254,
+          "diff": -0.007138000000000311,
+          "tol": 0.016248425,
+          "ok": true
+        },
+        {
+          "room": "room2",
+          "wall": "ceiling",
+          "a": 2.278607,
+          "b": 2.276642,
+          "diff": 0.0019650000000002166,
+          "tol": 0.01,
+          "ok": true
+        }
+      ],
+      "passed": false
+    },
+    {
+      "pair": [
+        "ark_422378_lidar_1",
+        "ark_422378_lidar_3"
+      ],
+      "tier": "lidar",
+      "rows": [
+        {
+          "room": "room2",
+          "wall": "E",
+          "a": 3.286077,
+          "b": 3.241518,
+          "diff": 0.044559000000000015,
+          "tol": 0.0163189875,
+          "ok": false
+        },
+        {
+          "room": "room2",
+          "wall": "N",
+          "a": 3.246116,
+          "b": 3.241518,
+          "diff": 0.004597999999999658,
+          "tol": 0.016219085,
+          "ok": true
+        },
+        {
+          "room": "room2",
+          "wall": "ceiling",
+          "a": 2.278607,
+          "b": 2.279037,
+          "diff": -0.0004300000000001525,
+          "tol": 0.01,
+          "ok": true
+        }
+      ],
+      "passed": false
+    },
+    {
+      "pair": [
+        "ark_471948_lidar_1",
+        "ark_471948_lidar_2"
+      ],
+      "tier": "lidar",
+      "rows": [
+        {
+          "room": "room2",
+          "wall": "W",
+          "a": 2.859291,
+          "b": 2.751757,
+          "diff": 0.1075339999999998,
+          "tol": 0.014027620000000001,
+          "ok": false
+        },
+        {
+          "room": "room2",
+          "wall": "ceiling",
+          "a": 2.347566,
+          "b": 2.34635,
+          "diff": 0.0012159999999998838,
+          "tol": 0.01,
+          "ok": true
+        }
+      ],
+      "passed": false
+    },
+    {
+      "pair": [
+        "ark_471948_lidar_1",
+        "ark_471948_lidar_3"
+      ],
+      "tier": "lidar",
+      "rows": [
+        {
+          "room": "room2",
+          "wall": "W",
+          "a": 2.859291,
+          "b": 2.748681,
+          "diff": 0.11060999999999988,
+          "tol": 0.01401993,
+          "ok": false
+        },
+        {
+          "room": "room2",
+          "wall": "ceiling",
+          "a": 2.347566,
+          "b": 2.356166,
+          "diff": -0.008599999999999941,
+          "tol": 0.01,
+          "ok": true
+        }
+      ],
+      "passed": false
+    }
+  ],
+  "calibration": [
+    {
+      "tier": "lidar",
+      "quantity": "wall_length",
+      "n": 15,
+      "coverage": 0.4666666666666667,
+      "median_interval_width": 0.03513699999999975,
+      "median_abs_err": 0.02634599999999976,
+      "in_band": false
+    },
+    {
+      "tier": "lidar",
+      "quantity": "ceiling_height",
+      "n": 9,
+      "coverage": 0.0,
+      "median_interval_width": 0.026053000000000104,
+      "median_abs_err": 0.022933999999999788,
+      "in_band": false
+    },
+    {
+      "tier": "lidar",
+      "quantity": "opening_width",
+      "n": 4,
+      "coverage": 0.75,
+      "median_interval_width": 0.23951300000000003,
+      "median_abs_err": 0.07749999999999996,
+      "in_band": false
+    },
+    {
+      "tier": "video",
+      "quantity": "wall_length",
+      "n": 2,
+      "coverage": 0.5,
+      "median_interval_width": 0.8505664999999998,
+      "median_abs_err": 0.47307350000000037,
+      "in_band": false
+    },
+    {
+      "tier": "video",
+      "quantity": "ceiling_height",
+      "n": 1,
+      "coverage": 1.0,
+      "median_interval_width": 0.510103,
+      "median_abs_err": 0.006000000000000227,
+      "in_band": false
+    },
+    {
+      "tier": "photo",
+      "quantity": "wall_length",
+      "n": 2,
+      "coverage": 1.0,
+      "median_interval_width": 4.216919000000001,
+      "median_abs_err": 0.7613474999999998,
+      "in_band": false
+    },
+    {
+      "tier": "photo",
+      "quantity": "ceiling_height",
+      "n": 1,
+      "coverage": 1.0,
+      "median_interval_width": 2.165988,
+      "median_abs_err": 0.36595400000000033,
+      "in_band": false
+    }
+  ],
+  "corrections_used": {
+    "lidar": {
+      "depth_scale": 1.0,
+      "depth_offset_m": 0.0
+    }
+  },
+  "drift_ablation": [
+    {
+      "capture": "ark_466183_lidar_1",
+      "on": {
+        "footprint_m2": 23.024705,
+        "footprint_err_pct": null,
+        "walls_within": 1,
+        "walls": 2,
+        "median_wall_err_cm": 7.242399999999982,
+        "adjacency": "0/0",
+        "drift_notes": "110 closure candidates tested, 19 accepted (4 rejected as inconsistent); loop residual 20.3 mm -> 7.6 mm; max heading correction 0.68 deg; Manhattan anchors on 0/45 submaps"
+      },
+      "off": {
+        "footprint_m2": 22.908832,
+        "footprint_err_pct": null,
+        "walls_within": 1,
+        "walls": 2,
+        "median_wall_err_cm": 7.226399999999966,
+        "adjacency": "0/0",
+        "drift_notes": ""
+      }
+    },
+    {
+      "capture": "ark_422378_lidar_1",
+      "on": {
+        "footprint_m2": 15.9522,
+        "footprint_err_pct": null,
+        "walls_within": 2,
+        "walls": 2,
+        "median_wall_err_cm": 1.038400000000017,
+        "adjacency": "0/0",
+        "drift_notes": "160 closure candidates tested, 21 accepted (0 rejected as inconsistent); loop residual 13.6 mm -> 2.3 mm; max heading correction 1.92 deg; Manhattan anchors on 42/61 submaps"
+      },
+      "off": {
+        "footprint_m2": 16.399422,
+        "footprint_err_pct": null,
+        "walls_within": 1,
+        "walls": 2,
+        "median_wall_err_cm": 3.4532999999999703,
+        "adjacency": "0/0",
+        "drift_notes": ""
+      }
+    },
+    {
+      "capture": "ark_471948_lidar_1",
+      "on": {
+        "footprint_m2": 8.156799,
+        "footprint_err_pct": null,
+        "walls_within": 0,
+        "walls": 1,
+        "median_wall_err_cm": 10.679099999999986,
+        "adjacency": "0/0",
+        "drift_notes": "21 closure candidates tested, 0 accepted (0 rejected as inconsistent); loop residual 0.0 mm -> 0.0 mm; max heading correction 0.25 deg; Manhattan anchors on 8/12 submaps"
+      },
+      "off": {
+        "footprint_m2": 8.034946,
+        "footprint_err_pct": null,
+        "walls_within": 0,
+        "walls": 1,
+        "median_wall_err_cm": 4.016399999999987,
+        "adjacency": "0/0",
+        "drift_notes": ""
+      }
+    }
+  ],
+  "timing_s": {
+    "ark_466183_lidar_1": 62.165,
+    "ark_466183_lidar_2": 51.641,
+    "ark_466183_lidar_3": 41.318,
+    "ark_466183_video_1": 2210.092,
+    "ark_466183_photo_1": 17.258,
+    "ark_422378_lidar_1": 69.704,
+    "ark_422378_lidar_2": 53.126,
+    "ark_422378_lidar_3": 39.498,
+    "ark_471948_lidar_1": 19.279,
+    "ark_471948_lidar_2": 15.95,
+    "ark_471948_lidar_3": 25.076
+  }
+}

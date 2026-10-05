@@ -1,0 +1,8 @@
+Full-tier benchmark of the public stand-in, before the fix-loop fix.
+- LiDAR (9 recordings + 3 drift ablations): copied from 6b78d8d/, the fix loop's before run (tag fixloop-before).
+- ark_466183_video_1, ark_466183_photo_1: produced at 48a105b (re-authored as an identical tree);
+  src/ differs from 6b78d8d only by the stitched-plan polygon repair (make_valid), which does not
+  change these single-room results.
+- Video and photo for homes 422378 and 471948 were NOT run: the run was stopped for lack of time
+  (each video takes ~35 min of structure from motion on the development laptop). They are listed in
+  manifest.yaml and regenerate with: groundplan bench run --manifest benchmark/public/manifest.yaml
