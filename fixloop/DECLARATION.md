@@ -6,9 +6,23 @@ cannot be edited after the fact.*
 
 ## 1. Worst-performing gate
 
-- Gate: _____________________ (tier: ______)
-- Threshold (from the brief): _____________________
-- Failing number: _____________ on benchmark run `benchmark/results/<sha>` (commit `fixloop-before`)
+- Gate: **opening widths** (tier: lidar)
+- Threshold (from the brief): <=2 cm on >=85%, misses+phantoms count
+- Failing number: **0% (0/10)** on benchmark run `benchmark/public/results/6b78d8d` (commit `6b78d8d`, tag `fixloop-before`)
+- Detail: missed 2, phantom 4
+
+All failing gates of that run, worst first (share of the requirement met):
+
+| gate | tier | value | met |
+|---|---|---|---|
+| opening widths | lidar | 0% (0/10) | 0% |
+| ceiling height | lidar | 3/9 rooms; max 3.9 cm | 33% |
+| repeatability (ark_471948_lidar_1 vs ark_471948_lidar_2) | lidar | 1/2 within tolerance | 50% |
+| repeatability (ark_471948_lidar_1 vs ark_471948_lidar_3) | lidar | 1/2 within tolerance | 50% |
+| wall lengths | lidar | 10/15 within; coverage 47% | 55% |
+| repeatability (ark_466183_lidar_1 vs ark_466183_lidar_3) | lidar | 2/3 within tolerance | 67% |
+| repeatability (ark_422378_lidar_1 vs ark_422378_lidar_2) | lidar | 2/3 within tolerance | 67% |
+| repeatability (ark_422378_lidar_1 vs ark_422378_lidar_3) | lidar | 2/3 within tolerance | 67% |
 
 ## 2. Root-cause hypothesis and evidence
 
