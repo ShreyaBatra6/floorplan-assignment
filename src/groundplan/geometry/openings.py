@@ -74,6 +74,7 @@ class OpeningParams:
     voxel: float = 0.02  # voxel size of the fused cloud (sets the half-maximum edge correction)
     halfmax_bin: float = 0.005
     halfmax_sigma: float = 0.008  # per jamb, once re-located on the wall points
+    refine_jambs: bool = False  # off: on real recordings it widened openings (fixloop/DECLARATION.md, part 2)
 
 
 def _profile_edge(coords: np.ndarray, start: float, stop: float, n_lines: int, p: OpeningParams) -> float | None:
@@ -280,8 +281,8 @@ def detect_openings(
                                     n_rows, p)
         s0 = left if left is not None else s_lo_c
         s1 = right if right is not None else s_hi_c
-        fine_l = _refine_jamb(s_sol[so_band], s0, -1.0, p)
-        fine_r = _refine_jamb(s_sol[so_band], s1, +1.0, p)
+        fine_l = _refine_jamb(s_sol[so_band], s0, -1.0, p) if p.refine_jambs else None
+        fine_r = _refine_jamb(s_sol[so_band], s1, +1.0, p) if p.refine_jambs else None
         if fine_l is not None:
             s0, sig_l = fine_l, p.halfmax_sigma
         if fine_r is not None:
