@@ -71,6 +71,24 @@ laser established (home 422378: door D1 0.79 m, window N2 1.77 m; 3 recordings).
 
 ## 4. Outcome (after the fix ships; regenerate with `python fixloop/run_fixloop.py`)
 
-- After-run value: ______ (commit `fixloop-after`)
-- Prediction vs outcome: ______
-- If the gate did not pass: why it fell short, with the numbers.
+- After-run value: **0 % (0/8)**, FAIL (commit `ea6c40c`, tag `fixloop-after`; `fixloop/RESULT.md`,
+  `fixloop/fix.diff`). Walls, ceilings and repeatability unchanged, as predicted.
+- Prediction vs outcome, part by part:
+  1. Shape rules - **as predicted.** Phantoms 4 -> 2: recording 1's two floor-level "passages"
+     (0.65 m and 1.15 m tall) are gone, and the door read as a 2.2 m "window" with a 2 cm sill is
+     now a floor-level opening; the two phantoms left are the ones predicted to stay (that door,
+     whose width is still far off at 1.33 m, and recording 3's 1.99 m tall passage).
+  2. Jamb re-location - **wrong.** Predicted 1-2 of 8 openings within 2 cm; got 0, and the widths
+     moved the wrong way: window N2 -3.0 -> +3.2 cm (rec. 1) and +3.5 -> +6.0 cm (rec. 2), door D1
+     +16 -> +26 cm (rec. 2), unchanged in rec. 3.
+- Why it fell short: the half-maximum rule assumes the wall plane ends cleanly at the jamb, which is
+  true of the synthetic flats it was tuned on (44 -> 69 % there). Real door frames and window reveals
+  carry casings and trim standing proud of the wall: wall-plane points thin out over several
+  centimetres before the opening, so the half-maximum lands outside the true edge and every width
+  grows. The evidence for this part came from synthetic data only, and the prediction inherited that
+  blind spot. The gate's numerator stayed at 0 because no width moved inside 2 cm; its denominator
+  fell from 10 to 8 because the shape rules removed two phantoms.
+- What follows: the shape rules stay. The jamb re-location is switched off by default after the loop
+  (it widens real openings); the next attempt measures jambs where the reveal begins (the change
+  of depth across the opening) rather than where wall-plane points thin out, and is validated on
+  real recordings before it is predicted.

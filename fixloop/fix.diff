@@ -1,0 +1,186 @@
+diff --git a/src/groundplan/geometry/openings.py b/src/groundplan/geometry/openings.py
+index 78cc96a..ce320ae 100644
+--- a/src/groundplan/geometry/openings.py
++++ b/src/groundplan/geometry/openings.py
+@@ -16,6 +16,11 @@ or passage). Each candidate is finally tested for reflection consistency: a mirr
+ through" too, but the points behind it, reflected back across the plane, land on surfaces observed
+ inside the room.
+ 
++The jambs are then re-located on the wall points alone, unbinned: walking across the jamb, the
++wall-point density rises from nothing (the hole) to its plateau (the wall), and the jamb is where it
++reaches half the plateau. A fused cloud stores one centroid per voxel, and the voxel cut by the jamb
++has its centroid on average a quarter voxel inside the wall, so the edge is moved back by that much.
++
+ Precision is bounded by the depth map: 256x192 depth with 2 cm voxels localises a jamb edge to
+ about a centimetre in good conditions, worse at grazing angles and near trim; the interval says so.
+ """
+@@ -61,10 +66,14 @@ class OpeningParams:
+     profile_solid: float = 0.35  # fraction of rows (or columns) with a solid point -> wall resumes
+     door_bottom_max: float = 0.15
+     door_top_min: float = 1.6
++    walk_min_height: float = 1.8  # anything reaching the floor must be this tall to be a door or passage
+     passage_width_min: float = 1.25
+     miss_max_range: float = 3.2  # a plane closer than this must have returned depth if it were solid
+     mirror_nn_dist: float = 0.04
+     mirror_fraction: float = 0.6
++    voxel: float = 0.02  # voxel size of the fused cloud (sets the half-maximum edge correction)
++    halfmax_bin: float = 0.005
++    halfmax_sigma: float = 0.008  # per jamb, once re-located on the wall points
+ 
+ 
+ def _profile_edge(coords: np.ndarray, start: float, stop: float, n_lines: int, p: OpeningParams) -> float | None:
+@@ -138,6 +147,41 @@ def _locate_edge(open_coords, solid_coords, start, stop, n_lines, p) -> tuple[fl
+     return open_edge + direction * min(gap, 0.1) / 2, gap / 4 + 0.005
+ 
+ 
++def _halfmax_edge(s: np.ndarray, start: float, direction: float, p: OpeningParams) -> float | None:
++    """Jamb at half the wall-point plateau, walking from ``start`` (inside the hole) in ``direction``.
++
++    The density is taken over 30 cm from 5 cm inside ``start``; the plateau is the median of its
++    outer 10 cm. Returns None if there are too few points or no plateau."""
++    lo, hi = (start - 0.05, start + 0.30) if direction > 0 else (start - 0.30, start + 0.05)
++    near = s[(s >= lo) & (s <= hi)]
++    if len(near) < 30:
++        return None
++    edges = np.arange(lo, hi + p.halfmax_bin, p.halfmax_bin)
++    cnt = np.convolve(np.histogram(near, bins=edges)[0], np.ones(3) / 3, mode="same")
++    centres = (edges[:-1] + edges[1:]) / 2
++    if direction < 0:
++        cnt, centres = cnt[::-1], centres[::-1]
++    plateau = float(np.median(cnt[-int(round(0.10 / p.halfmax_bin)):]))
++    if plateau <= 0:
++        return None
++    above = np.flatnonzero(cnt >= 0.5 * plateau)
++    if len(above) == 0 or above[0] == 0:
++        return None
++    j = above[0]
++    f = (0.5 * plateau - cnt[j - 1]) / max(cnt[j] - cnt[j - 1], 1e-9)
++    edge = centres[j - 1] + f * (centres[j] - centres[j - 1])
++    return float(edge - direction * p.voxel / 4)  # boundary-voxel centroids sit a quarter voxel into the wall
++
++
++def _refine_jamb(s_wall: np.ndarray, coarse: float, direction: float, p: OpeningParams) -> float | None:
++    """Half-maximum jamb, accepted only if it agrees with the ray evidence around ``coarse``."""
++    e = _halfmax_edge(s_wall, coarse, direction, p)
++    if e is None:
++        return None
++    step = (e - coarse) * direction  # positive: further into the wall than the coarse edge
++    return e if -0.02 <= step <= 0.25 else None
++
++
+ def detect_openings(
+     axis: int,
+     offset: float,
+@@ -236,6 +280,12 @@ def detect_openings(
+                                     n_rows, p)
+         s0 = left if left is not None else s_lo_c
+         s1 = right if right is not None else s_hi_c
++        fine_l = _refine_jamb(s_sol[so_band], s0, -1.0, p)
++        fine_r = _refine_jamb(s_sol[so_band], s1, +1.0, p)
++        if fine_l is not None:
++            s0, sig_l = fine_l, p.halfmax_sigma
++        if fine_r is not None:
++            s1, sig_r = fine_r, p.halfmax_sigma
+         s0, s1 = max(s0, 0.0), min(s1, length)
+         width = s1 - s0
+         if width < p.min_width or width > p.max_width:
+@@ -256,8 +306,12 @@ def detect_openings(
+             h0, sig_s = float(low_open), 0.05  # wall below hidden (furniture): sill bounded by open evidence
+         else:
+             h0, sig_s = 0.0, 0.0
++        if 0.0 < h0 <= p.door_bottom_max:
++            h0, sig_s = 0.0, 0.0  # a "sill" a few cm high is an unobserved threshold: the opening reaches the floor
+         if h1 - h0 < p.min_height:
+             continue
++        if h0 == 0.0 and h1 < p.walk_min_height:
++            continue  # reaches the floor but too low to walk through: the gap under or behind furniture, not an opening
+         sel = beyond_idx[(s_cr[beyond_idx] >= s0) & (s_cr[beyond_idx] < s1) &
+                          (cross_h[beyond_idx] >= h0) & (cross_h[beyond_idx] < h1)]
+         if h0 == 0.0 and (width >= p.passage_width_min or h1 >= wall_height - 0.05):
+diff --git a/src/groundplan/tiers/photo.py b/src/groundplan/tiers/photo.py
+index c4ca83a..6f851f5 100644
+--- a/src/groundplan/tiers/photo.py
++++ b/src/groundplan/tiers/photo.py
+@@ -25,6 +25,7 @@ from groundplan.damage.ortho import View
+ from groundplan.geometry.manhattan import dominant_yaw
+ from groundplan.geometry.planes import ransac_plane
+ from groundplan.geometry.pointcloud import flying_pixel_mask, image_normals, voxel_fuse
++from groundplan.geometry.openings import OpeningParams
+ from groundplan.geometry.rooms import SegParams
+ from groundplan.geometry.scene import CoreParams, SceneInput, SceneLayout, build_layout
+ from groundplan.io.photos import Photo, RoomPhotos, load_photo_folders
+@@ -32,7 +33,7 @@ from groundplan.models.depth import predict_depth
+ from groundplan.tiers import scale as S
+ from groundplan.tiers.paper import find_sheet
+ 
+-PHOTO_CORE = CoreParams(grid_res=0.03, min_wall_span=0.5, refine_band=0.15, refine_h_lo=0.2,
++PHOTO_CORE = CoreParams(openings=OpeningParams(voxel=0.03), grid_res=0.03, min_wall_span=0.5, refine_band=0.15, refine_h_lo=0.2,
+                         unobserved_wall_sigma=0.15, wall_band_bottom=0.1,
+                         seg=SegParams(min_wall_span=0.5, min_free_rays=1.0, marker_min_dist=0.4, max_door_width=1.6,
+                                       min_room_area=1.5))
+diff --git a/src/groundplan/tiers/video.py b/src/groundplan/tiers/video.py
+index c49eb16..0d9193f 100644
+--- a/src/groundplan/tiers/video.py
++++ b/src/groundplan/tiers/video.py
+@@ -30,6 +30,7 @@ import numpy as np
+ 
+ from groundplan.damage.ortho import View
+ from groundplan.geometry.pointcloud import flying_pixel_mask, image_normals, voxel_fuse
++from groundplan.geometry.openings import OpeningParams
+ from groundplan.geometry.rooms import SegParams
+ from groundplan.geometry.scene import CoreParams, SceneInput, SceneLayout, build_layout
+ from groundplan.io.video import VideoClip, read_video
+@@ -39,7 +40,7 @@ from groundplan.tiers.paper import find_sheet
+ 
+ SFM_THREADS = 2
+ 
+-VIDEO_CORE = CoreParams(grid_res=0.025, min_wall_span=0.6, refine_band=0.12, refine_h_lo=0.2,
++VIDEO_CORE = CoreParams(openings=OpeningParams(voxel=0.025), grid_res=0.025, min_wall_span=0.6, refine_band=0.12, refine_h_lo=0.2,
+                         unobserved_wall_sigma=0.12, wall_band_bottom=0.1,
+                         seg=SegParams(min_wall_span=0.6, min_free_rays=1.5, marker_min_dist=0.35, min_room_area=1.2))
+ 
+diff --git a/tests/test_opening_shapes.py b/tests/test_opening_shapes.py
+new file mode 100644
+index 0000000..1198dc9
+--- /dev/null
++++ b/tests/test_opening_shapes.py
+@@ -0,0 +1,39 @@
++"""Opening shape rules: what reaches the floor must be tall enough to walk through."""
++
++import numpy as np
++
++from groundplan.geometry.openings import detect_openings
++
++
++def _wall_with_holes(holes, length=4.0, height=2.5, step=0.02):
++    s, h = np.meshgrid(np.arange(0, length, step), np.arange(0, height, step))
++    s, h = s.ravel(), h.ravel()
++    keep = np.ones(len(s), bool)
++    for s0, s1, h0, h1 in holes:
++        keep &= ~((s > s0) & (s < s1) & (h > h0) & (h < h1))
++    return s[keep], h[keep]
++
++
++def _rays_through(holes, cam=(2.0, 2.0), cam_h=1.4, step=0.02):
++    ends_xy, ends_h = [], []
++    for s0, s1, h0, h1 in holes:
++        ss, hh = np.meshgrid(np.arange(s0 + step, s1, step), np.arange(h0 + step, h1, step))
++        for sv, hv in zip(ss.ravel(), hh.ravel()):
++            t = 1.6  # the ray crosses the wall plane (y = 0) and ends 1.2 m beyond it
++            ends_xy.append([cam[0] + (sv - cam[0]) * t, cam[1] + (0.0 - cam[1]) * t])
++            ends_h.append(cam_h + (hv - cam_h) * t)
++    n = len(ends_xy)
++    return (np.tile(cam, (n, 1)).astype(float), np.full(n, cam_h), np.array(ends_xy), np.array(ends_h))
++
++
++def test_low_floor_level_gap_is_not_an_opening_but_the_door_is():
++    door = (3.0, 3.9, -0.1, 2.05)
++    low_gap = (0.6, 2.4, -0.1, 0.7)  # 1.8 m wide, 0.7 m tall, at floor level (under furniture)
++    s, h = _wall_with_holes([door, low_gap])
++    solid_xy = np.c_[s, np.zeros_like(s)]
++    rs_xy, rs_h, re_xy, re_h = _rays_through([door, low_gap])
++    cands = detect_openings(1, 0.0, 1, np.array([0.0, 0.0]), np.array([4.0, 0.0]), 2.5, solid_xy, h,
++                            rs_xy, rs_h, re_xy, re_h, None)
++    assert len(cands) == 1
++    c = cands[0]
++    assert c.kind == "door" and abs(c.width - 0.9) < 0.03 and c.s0 > 2.8
