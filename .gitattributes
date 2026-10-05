@@ -8,3 +8,12 @@
 *.glb binary
 *.gltf text
 *.ps1 text eol=crlf
+
+# Generated pipeline outputs (benchmark runs, examples, fix-loop runs): not source code,
+# so they are left out of GitHub's language statistics and collapsed in diffs.
+benchmark/public/results/** linguist-generated
+benchmark/results/** linguist-generated
+examples/** linguist-generated
+fixloop/runs/** linguist-generated
+fixloop/fix.diff linguist-generated
+docs/*.pdf linguist-generated
