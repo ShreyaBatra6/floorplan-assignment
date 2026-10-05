@@ -101,7 +101,9 @@ scripts/          setup, model/data fetch, development helpers
 ```
 
 Public stand-in benchmark (ARKitScenes homes with laser-scan truth, until our own captures exist):
-[`docs/PUBLIC_BENCHMARK.md`](docs/PUBLIC_BENCHMARK.md).
+[`docs/PUBLIC_BENCHMARK.md`](docs/PUBLIC_BENCHMARK.md); results at all three tiers in
+[`benchmark/public/results/full_6b78d8d/`](benchmark/public/results/full_6b78d8d/benchmark_report.md); the fix loop
+(declaration, before/after, diff) in [`fixloop/`](fixloop/DECLARATION.md).
 Requirement-by-requirement status: [`docs/COMPLIANCE_MATRIX.md`](docs/COMPLIANCE_MATRIX.md).
 
 ## Models, data, tools and APIs (disclosure)

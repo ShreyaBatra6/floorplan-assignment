@@ -73,6 +73,12 @@ synthetic scan with a rotated 4.0 x 3.0 m room, a 2.6 m ceiling, a 0.90 m door w
 behind it and a 2 m wardrobe in front of a wall: room within 5 mm, ceiling within 5 mm, door within
 1.5 cm.
 
+## Results
+
+`benchmark/public/results/full_6b78d8d/benchmark_report.md` (all three tiers, before the fix loop;
+video and photo of homes 422378 and 471948 were not run in time) and the fix loop on the LiDAR tier
+in `fixloop/` (`manifest_lidar.yaml`). Summary in the technical report, sections 9 and 11.
+
 ## Limits (read before quoting any number)
 
 * An iPad Pro 2020 is not an iPhone 15, and these recordings did not follow our capture protocol
