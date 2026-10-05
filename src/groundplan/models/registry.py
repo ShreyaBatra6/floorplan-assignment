@@ -17,7 +17,7 @@ import numpy as np
 
 CACHE_DIR = Path(os.environ.get("GROUNDPLAN_CACHE_DIR", Path.home() / ".cache" / "groundplan"))
 
-# model key -> (hub id, pinned revision). Revisions are pinned once verified; see docs/MODELS_AND_DATA.md.
+# model key -> (hub id, pinned revision). Revisions are pinned once verified; see the README disclosure.
 MODELS: dict[str, tuple[str, str]] = {
     "clip": ("openai/clip-vit-base-patch32", "main"),
     "depth_da2": ("depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf", "main"),
