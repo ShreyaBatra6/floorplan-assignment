@@ -2,7 +2,7 @@
 
 Requirement → file path → artifact → status, for every requirement of the brief. Generated from `docs/compliance.yaml` by `scripts/compliance.py`, which also fails if any cited path is missing.
 
-Summary: done 22, partial 6, pending: benchmark data 7, pending: fix loop (after benchmark) 2
+Summary: done 24, partial 6, pending: benchmark data 7
 
 | ID | Part | Requirement | File path(s) | Artifact | Status |
 |---|---|---|---|---|---|
@@ -30,8 +30,8 @@ Summary: done 22, partial 6, pending: benchmark data 7, pending: fix loop (after
 | P2.15 | 2 Gates | Photo-tier whole-property stitch: correct adjacency, no overlaps, footprint +-8 % with calibrated intervals | [`src/groundplan/bench/runner.py`](../src/groundplan/bench/runner.py)<br>[`src/groundplan/stitching.py`](../src/groundplan/stitching.py) | photo stitch gate | pending: benchmark data |
 | P2.16 | 2 Gates | Photo walls +-8 %, video +-3 %, calibration scored at every tier | [`src/groundplan/bench/gates.py`](../src/groundplan/bench/gates.py)<br>[`src/groundplan/bench/calibrate.py`](../src/groundplan/bench/calibrate.py) | wall_gate + calibration table (leave-one-capture-out) | pending: benchmark data |
 | P3.1 | 3 Head-to-head | LiDAR tier vs one consumer app on 2 rooms (name, version, export); one table; beat or tie >= 70 % | [`src/groundplan/bench/h2h.py`](../src/groundplan/bench/h2h.py)<br>[`benchmark/app_exports/polycam_dimensions.csv`](../benchmark/app_exports/polycam_dimensions.csv) | head-to-head table with explicit tie rule | pending: benchmark data |
-| P4.1 | 4 Fix loop | One-page fix declaration: worst gate + number, root-cause hypothesis + evidence, fix + predicted number | [`fixloop/DECLARATION.md`](../fixloop/DECLARATION.md) | declaration (filled after the benchmark) | pending: fix loop (after benchmark) |
-| P4.2 | 4 Fix loop | Ship the fix; before and after runs regenerable; readable diff | [`fixloop/run_fixloop.py`](../fixloop/run_fixloop.py)<br>[`fixloop/README.md`](../fixloop/README.md) | git-worktree regeneration of both runs + diff | pending: fix loop (after benchmark) |
+| P4.1 | 4 Fix loop | One-page fix declaration: worst gate + number, root-cause hypothesis + evidence, fix + predicted number | [`fixloop/DECLARATION.md`](../fixloop/DECLARATION.md) | declaration on the public stand-in (worst gate LiDAR openings 0 %, root cause, fix, prediction), committed and tagged before the fix | done |
+| P4.2 | 4 Fix loop | Ship the fix; before and after runs regenerable; readable diff | [`fixloop/run_fixloop.py`](../fixloop/run_fixloop.py)<br>[`fixloop/README.md`](../fixloop/README.md) | fix shipped (de97022); before/after regenerable from tags; RESULT.md + fix.diff; outcome 0 % -> 0 % with post-mortem | done |
 | P5.1 | 5 Process | Commit as you work; history that could belong to the builder | [`README.md`](../README.md) | git log (incremental commits with messages explaining each step) | done |
 | D3 | Deliverables | README to running on a fresh capture in under 15 minutes on a clean machine | [`README.md`](../README.md)<br>[`scripts/setup.ps1`](../scripts/setup.ps1)<br>[`scripts/setup.sh`](../scripts/setup.sh)<br>[`scripts/fetch_models.py`](../scripts/fetch_models.py) | uv-based setup, timed on a clean clone | done |
 | D4 | Deliverables | Reproduction bundle: every reported number regenerable from raw inputs; cached model outputs replay deterministically and the live path runs | [`src/groundplan/bench/runner.py`](../src/groundplan/bench/runner.py)<br>[`src/groundplan/models/registry.py`](../src/groundplan/models/registry.py)<br>[`scripts/fetch_data.py`](../scripts/fetch_data.py) | groundplan bench run; content-hash cache; --no-cache | done |

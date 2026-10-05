@@ -206,9 +206,21 @@ the facts that satisfied them; scope quantities carry propagated intervals.
 
 ## 11. Fix loop
 
-**[after the benchmark]** Declaration (worst gate, failing number, root cause with evidence, fix,
-predicted number) committed before the fix (`fixloop/DECLARATION.md`, tag `fixloop-declared`);
-before/after regenerated from worktrees by `fixloop/run_fixloop.py`.
+Run on the stand-in's LiDAR tier (`fixloop/`; tags `fixloop-before`, `fixloop-declared`,
+`fixloop-after`, each pushed before the next step). **Worst gate:** opening widths, 0 % (0/10:
+2 missed, 4 phantoms) in the one room whose openings the laser established. **Root cause, two
+parts:** (1) no physical shape check: floor-level regions 0.65 m and 1.15 m tall were reported as
+passages, and a door with an unobserved 2 cm threshold as a window (reproduced on a synthetic wall);
+(2) jambs from a binned profile of sparse wall points, widths 3-16 cm off. **Fix:** shape rules
+(anything reaching the floor at least 1.8 m tall; a "sill" under 15 cm is a threshold) and jambs
+re-located at the half-maximum of the wall-point density. **Prediction:** phantoms 4 -> 2, 1-2 of 8
+widths within 2 cm, gate 12-25 %, still failing. **Outcome:** 0 % (0/8). Phantoms 4 -> 2 exactly as
+predicted; the width part was wrong: real frames and reveals carry trim, so the half-maximum lands
+outside the opening and widths grew by 3-10 cm (it had helped on clean synthetic edges, 44 -> 69 %).
+The shape rules stay; the jamb re-location is switched off after the loop. Next: locate jambs at the
+change of depth where the reveal begins, validated on real recordings first. `fixloop/RESULT.md`,
+`fixloop/fix.diff` and the declaration hold the numbers; `python fixloop/run_fixloop.py` regenerates
+both runs.
 
 ## 12. Mirrors, glass, wet-look surfaces, low light
 
