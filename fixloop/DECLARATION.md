@@ -88,7 +88,10 @@ laser established (home 422378: door D1 0.79 m, window N2 1.77 m; 3 recordings).
   grows. The evidence for this part came from synthetic data only, and the prediction inherited that
   blind spot. The gate's numerator stayed at 0 because no width moved inside 2 cm; its denominator
   fell from 10 to 8 because the shape rules removed two phantoms.
-- What follows: the shape rules stay. The jamb re-location is switched off by default after the loop
-  (it widens real openings); the next attempt measures jambs where the reveal begins (the change
-  of depth across the opening) rather than where wall-plane points thin out, and is validated on
-  real recordings before it is predicted.
+- What follows (on `main` after the loop): the jamb re-location is off by default (it widens real
+  openings). The threshold rule (a sill under 15 cm means a door) stays on. Rejecting low floor-level
+  gaps is opt-in: with it on, those regions behind furniture are searched for damage, and the
+  assessor sample's staged-damage test showed a false positive there (passes before, fails after),
+  which the stand-in benchmark could not show because it has no damage truth. Next: hand those
+  regions to damage detection as unobserved areas, then turn the rule on; measure jambs at the
+  change of depth where the reveal begins, validated on real recordings before predicting.

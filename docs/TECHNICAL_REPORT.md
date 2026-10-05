@@ -217,8 +217,10 @@ re-located at the half-maximum of the wall-point density. **Prediction:** phanto
 widths within 2 cm, gate 12-25 %, still failing. **Outcome:** 0 % (0/8). Phantoms 4 -> 2 exactly as
 predicted; the width part was wrong: real frames and reveals carry trim, so the half-maximum lands
 outside the opening and widths grew by 3-10 cm (it had helped on clean synthetic edges, 44 -> 69 %).
-The shape rules stay; the jamb re-location is switched off after the loop. Next: locate jambs at the
-change of depth where the reveal begins, validated on real recordings first. `fixloop/RESULT.md`,
+After the loop, on `main`: the jamb re-location is off; the low-gap rejection is opt-in, because the
+staged-damage test on the assessor sample showed those regions then yield a damage false positive
+(the stand-in has no damage truth, so the loop could not see it). Next: pass them to damage as
+unobserved areas; locate jambs at the change of depth where the reveal begins. `fixloop/RESULT.md`,
 `fixloop/fix.diff` and the declaration hold the numbers; `python fixloop/run_fixloop.py` regenerates
 both runs.
 
