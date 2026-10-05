@@ -200,7 +200,7 @@ def cmd_after(a) -> int:
     git("tag", "-a", AFTER, "-m", "Fix loop: code state of the after benchmark run")
     cmd = [sys.executable, str(ROOT / "fixloop" / "run_fixloop.py"), "--before", BEFORE, "--after", AFTER,
            "--manifest", str(Path(a.manifest).resolve())]
-    before_run = Path(a.manifest).resolve().parent / "results" / git("rev-parse", "--short", BEFORE).stdout.strip()
+    before_run = Path(a.manifest).resolve().parent / "results" / git("rev-parse", "--short", BEFORE + "^{commit}").stdout.strip()
     if not a.fresh and (before_run / "metrics.json").exists():
         cmd += ["--reuse-before", str(before_run)]  # made by `before` at the tagged commit; --fresh redoes it
     r = subprocess.run(cmd, cwd=ROOT)
