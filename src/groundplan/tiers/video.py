@@ -30,6 +30,7 @@ import numpy as np
 
 from groundplan.damage.ortho import View
 from groundplan.geometry.pointcloud import flying_pixel_mask, image_normals, voxel_fuse
+from groundplan.geometry.openings import OpeningParams
 from groundplan.geometry.rooms import SegParams
 from groundplan.geometry.scene import CoreParams, SceneInput, SceneLayout, build_layout
 from groundplan.io.video import VideoClip, read_video
@@ -39,7 +40,7 @@ from groundplan.tiers.paper import find_sheet
 
 SFM_THREADS = 2
 
-VIDEO_CORE = CoreParams(grid_res=0.025, min_wall_span=0.6, refine_band=0.12, refine_h_lo=0.2,
+VIDEO_CORE = CoreParams(openings=OpeningParams(voxel=0.025), grid_res=0.025, min_wall_span=0.6, refine_band=0.12, refine_h_lo=0.2,
                         unobserved_wall_sigma=0.12, wall_band_bottom=0.1,
                         seg=SegParams(min_wall_span=0.6, min_free_rays=1.5, marker_min_dist=0.35, min_room_area=1.2))
 

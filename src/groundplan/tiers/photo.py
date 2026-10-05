@@ -25,6 +25,7 @@ from groundplan.damage.ortho import View
 from groundplan.geometry.manhattan import dominant_yaw
 from groundplan.geometry.planes import ransac_plane
 from groundplan.geometry.pointcloud import flying_pixel_mask, image_normals, voxel_fuse
+from groundplan.geometry.openings import OpeningParams
 from groundplan.geometry.rooms import SegParams
 from groundplan.geometry.scene import CoreParams, SceneInput, SceneLayout, build_layout
 from groundplan.io.photos import Photo, RoomPhotos, load_photo_folders
@@ -32,7 +33,7 @@ from groundplan.models.depth import predict_depth
 from groundplan.tiers import scale as S
 from groundplan.tiers.paper import find_sheet
 
-PHOTO_CORE = CoreParams(grid_res=0.03, min_wall_span=0.5, refine_band=0.15, refine_h_lo=0.2,
+PHOTO_CORE = CoreParams(openings=OpeningParams(voxel=0.03), grid_res=0.03, min_wall_span=0.5, refine_band=0.15, refine_h_lo=0.2,
                         unobserved_wall_sigma=0.15, wall_band_bottom=0.1,
                         seg=SegParams(min_wall_span=0.5, min_free_rays=1.0, marker_min_dist=0.4, max_door_width=1.6,
                                       min_room_area=1.5))
